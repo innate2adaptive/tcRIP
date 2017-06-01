@@ -22,36 +22,38 @@ from sklearn.model_selection import train_test_split
 ########################################################
 # big parameters
 train=True
-RNN = False
-pureNN = True
-onlyCD3 = False # this means files contain CDR1/2 sequences so have to be parsed differently
+RNN = True
+pureNN = False
+onlyCD3 = True # this means files contain CDR1/2 sequences so have to be parsed differently
 
 # module parameters in dictionaries
 dataParams={'integerize':False,
             'clipping':False,
             'clipLen':14, # this clips sequences to this length
-            'filter':False, # this filters only sequences of this length
+            'filter':True, # this filters only sequences of this length
             'filterLen':14, #
-            'pTuple':True,
-            'kmeans':True
+            'pTuple':False,
+            'kmeans':False,
+            'originalAtch':True
             }
-rnnControllerParams={'batch_size':64,
-                     'epochs':100}
+rnnControllerParams={'batch_size':128,
+                     'epochs':200}
                      
 rnnModelParams={'learningRate':0.0001,
                 'embedding_size':10,
                 'vocab_size':22,
-                'cell_size':64,
+                'cell_size':128,
                 'LSTM':False, # if false it uses GRU
                 'stacked':False,
-                'dropout':False,
+                'dropout':True,
                 'unidirectional':True,
-                'attention':False,
-                'atten_len':10,
+                'attention':True,
+                'atten_len':2,
                 'regu':False, # not being used
                 'batch_norm':False, # uses batch norm on the last affine layers
-                'onlyLinear':True,
-                'conv':False, 
+                'onlyLinear':False,
+                'conv':False,
+                'embed':False,
                 'save':True,
                 'load':False}
             
@@ -71,7 +73,7 @@ where each sequence is encoded as a string and comma separated with its count
 at current extraction is unique and count is ignored
 """
 # Files to be read
-files = [cd4B_file, cd8B_file]
+files = [cd4A_file, cd8A_file]
 
 # sequence list to be filled. Make sure file order is the same as a below
 cd4=[]
@@ -135,11 +137,12 @@ if dataParams['clipping']==True:
             
 # this will return only sequences of a set length
 if dataParams['filter']==True:
-    cd4=dp.filter(cd4, dataParams['filterLen'])
-    cd8=dp.filter(cd8, dataParams['filterLen'])
+    cd4=dp.filtr(cd4, dataParams['filterLen'])
+    cd8=dp.filtr(cd8, dataParams['filterLen'])
     sqlen=[]
     for i in range(len(cd4)+len(cd8)):
         sqlen.append(dataParams['filterLen'])
+    rnnModelParams['maxLen']=dataParams['filterLen']
 
 # this will replace amino acids with an integer ID specified in dataProcessing.py
 if dataParams['integerize']==True:
@@ -147,6 +150,12 @@ if dataParams['integerize']==True:
     cd8=dp.char2int(cd8, longest)
     seqs=None
 
+    
+if dataParams['originalAtch']==True:
+    cd4=dp.seq2fatch(cd4)
+    cd8=dp.seq2fatch(cd8)
+    
+    
 # from this point it is assumed cd4/8 are NUMPY vectors
 # labels are created and then the X and Y vectors are shuffled and combo'd
 y4=np.zeros((len(cd4)))
@@ -157,6 +166,8 @@ y8[:]=1
 # combine classes
 Y = np.concatenate((y4,y8),0)
 X = np.concatenate((cd4,cd8),0)
+
+print("CD4 to CD8 Ratio {}:{}".format(len(cd4)/(len(cd4)+len(cd8)),len(cd8)/(len(cd4)+len(cd8))))
 
 # memory clean up
 cd4=None
@@ -177,7 +188,9 @@ if dataParams['pTuple']==True:
 # shuffle data
 X, Y, sqlen = sk.utils.shuffle(X,Y,sqlen)
 
-
+if RNN==True and rnnModelParams['embed']==False:
+    X=np.reshape(X,(-1,5,dataParams['filterLen']))
+    
 xTrain, xHalf, yTrain, yHalf, sqTrain, sqHalf = train_test_split(X, Y, sqlen, test_size=0.20) 
 # memory clean up
 X=None
@@ -207,9 +220,6 @@ if train==True:
         rnnModelParams['maxLen']=xTrain.shape[1]
         nnMain=n2.Controller(rnnControllerParams, rnnModelParams) 
         print("Training NN")
-#        if dataParams['pTuple']==True:
-#            xTrain=xTrain.toarray()
-#            xVal=xVal.toarray()
         nnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
         
         

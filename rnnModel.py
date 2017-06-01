@@ -127,6 +127,7 @@ class Model:
         self.batch_norm=params['batch_norm']
         self.onlyLinear=params['onlyLinear']
         self.conv=params['conv']
+        self.embed=params['embed']
         # stores the session as an attribute
         self.session = self.getPartyStarted() # creates the model
         
@@ -139,14 +140,15 @@ class Model:
         self.input_holder, self.labels_holder, self.phase_holder, self.seqlen_holder = self.add_place()
         #set random seed
         tf.set_random_seed(80085)
+        x = self.input_holder
         
-        # set up embeddings layer
-        with tf.name_scope("embeddings"):
-            x = self.input_holder
-            initz = tf.contrib.layers.xavier_initializer(uniform=True, seed=None, dtype=tf.float32)
-            # Word embeddings
-            embeddings = tf.get_variable("W", [self.vocab_size, self.emb_size], initializer=initz)
-            x = tf.nn.embedding_lookup(embeddings, x) # [batch_size x max_seq_length x input_size]    
+        if self.embed:        
+            # set up embeddings layer
+            with tf.name_scope("embeddings"):
+                initz = tf.contrib.layers.xavier_initializer(uniform=True, seed=None, dtype=tf.float32)
+                # Word embeddings
+                embeddings = tf.get_variable("W", [self.vocab_size, self.emb_size], initializer=initz)
+                x = tf.nn.embedding_lookup(embeddings, x) # [batch_size x max_seq_length x input_size]    
         
         # if we only want a deep net this is true otherwise RNN
         if self.onlyLinear==True:
@@ -183,21 +185,21 @@ class Model:
                 
         else:
             # Define Cell
-            if self.lstm==True:
-                cell = tf.contrib.rnn.LSTMCell(num_units=self.cell_size, state_is_tuple=True, use_peepholes=False)  # create standard cell
-            else:
-                cell = tf.contrib.rnn.GRUCell(num_units=self.cell_size)
-            if self.stacked==True:
-                cell = tf.contrib.rnn.MultiRNNCell(cells=[cell] * 2, state_is_tuple=True) # add 3 layers
-            if self.dropout == True:
-                cell = tf.contrib.rnn.DropoutWrapper(cell=cell, output_keep_prob=0.5)     # add dropout
-            if self.attention==True:
-                cell = tf.contrib.rnn.AttentionCellWrapper(cell, attn_length=self.attn_len, state_is_tuple=True)
-                
+#            if self.lstm==True:
+#                cell = tf.contrib.rnn.LSTMCell(num_units=self.cell_size, state_is_tuple=True, use_peepholes=False)  # create standard cell
+#            else:
+#                cell = tf.contrib.rnn.GRUCell(num_units=self.cell_size)
+#            if self.stacked==True:
+#                cell = tf.contrib.rnn.MultiRNNCell(cells=[cell] * 2, state_is_tuple=True) # add 3 layers
+#            if self.dropout == True:
+#                cell = tf.contrib.rnn.DropoutWrapper(cell=cell, output_keep_prob=0.5)     # add dropout
+#            if self.attention==True:
+#                cell = tf.contrib.rnn.AttentionCellWrapper(cell, attn_length=self.attn_len, state_is_tuple=True)
+#                
             seq_length=self.seqlen_holder
             
             if self.single==True:
-                
+                cell=self.add_cells()
                 # run dynamic rnn so not having to worry about looping
                 val, _ = tf.nn.dynamic_rnn(cell, x, dtype=tf.float32, sequence_length=seq_length)
                 
@@ -209,8 +211,8 @@ class Model:
             else:
                 bs = tf.shape(x)[0]
                 # intialize forward and backward cell states to zero
-                cellb=cell
-                cellf=cell
+                cellb=self.add_cells()
+                cellf=self.add_cells()
                 initial_statef = cellf.zero_state(bs, tf.float32)
                 initial_stateb = cellb.zero_state(bs, tf.float32)
                 
@@ -226,7 +228,7 @@ class Model:
             
 
         # perform nonlinear layer 
-        x = tf.contrib.layers.fully_connected(val, 256, activation_fn=None, biases_initializer=tf.zeros_initializer) 
+        x = tf.contrib.layers.fully_connected(val, 128, activation_fn=None, biases_initializer=tf.zeros_initializer) 
         if self.batch_norm==True:
             x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
         x = tf.nn.elu(x, 'elu')
@@ -267,13 +269,7 @@ class Model:
                 clip_gradients=Clip_gradients,
                 gradient_noise_scale=Gradient_noise_scale
             )         
-
-#            optimizr=tf.train.AdamOptimizer(learning_rate=self.learningRate)
-#            
-#            self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=self.labels_holder))
-#            self.train_optimizer=optimizr.minimize(self.loss)
             
-             # spool up the session and get the variables initialized
             sess = tf.Session()
             sess.run(tf.global_variables_initializer())
 
@@ -284,12 +280,30 @@ class Model:
         
         return sess
     
+    def add_cells(self):
+        if self.lstm==True:
+            cell = tf.contrib.rnn.LSTMCell(num_units=self.cell_size, state_is_tuple=True, use_peepholes=False)  # create standard cell
+        else:
+            cell = tf.contrib.rnn.GRUCell(num_units=self.cell_size)
+        if self.stacked==True:
+            cell = tf.contrib.rnn.MultiRNNCell(cells=[cell] * 2, state_is_tuple=True) # add 3 layers
+        if self.dropout == True:
+            cell = tf.contrib.rnn.DropoutWrapper(cell=cell, output_keep_prob=0.5)     # add dropout
+        if self.attention==True:
+            cell = tf.contrib.rnn.AttentionCellWrapper(cell, attn_length=self.attentionLen, state_is_tuple=True)
+                
+        return cell
+    
     def add_place(self):
         """
         Adds the place holders to the model
         """
         # set up tf place holders
-        x = tf.placeholder(tf.int32, [None, self.maxL])  # input sequences
+        
+        if self.embed:
+            x = tf.placeholder(tf.int32, [None, self.maxL])  # input sequences
+        else:
+            x = tf.placeholder(tf.float32, [None, 5 ,self.maxL])
         y = tf.placeholder(tf.float32, [None,1])           # labels
         phase = tf.placeholder(tf.bool, name='phase')    # true if training
         s = tf.placeholder(tf.int32, [None])             # sequence lengths

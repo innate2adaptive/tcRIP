@@ -69,13 +69,22 @@ def clip(seqs, ln):
         seqs[idx]=seq[:len]
     return seqs
 
-def filter(seqs, ln):
+def filtr(seqs, ln):
     """Goes through list of sequences and clips the sequence to ln characters long"""
     newSeq=[]
     for idx, seq in enumerate(seqs):
-        if len(seq)==14:
+        if len(seq)==ln:
             newSeq.append(seq)
     return newSeq
+    
+def seq2fatch(seqs):
+    for idx, seq in enumerate(seqs):
+        vec=[]
+        for char in seq:
+            vec=np.concatenate((vec,af.atchleyFactor(char)))
+        seqs[idx]=vec
+    seqs=np.array(seqs)
+    return seqs
     
 #==============================================================================
 # Unsupervized clustering of pTuples using k-means    
