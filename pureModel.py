@@ -241,11 +241,14 @@ class Model:
     def pred(self, x, phase, s):
         """
         Performs a single prediction based on the currently trainined model
-        """        
+        """     
+    
+        if str(type(x))=="<class 'scipy.sparse.csr.csr_matrix'>":
+            x=x.toarray()
         loss, pred_probs = self.session.run(
                 [self.loss, self.preds],
                 feed_dict = {self.input_holder: x, 
-                             self.labels_holder: np.zeros((len(x),1)),
+                             self.labels_holder: np.zeros((x.shape[0],1)),
                              self.phase_holder: phase, 
                              self.seqlen_holder: s
                              })

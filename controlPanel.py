@@ -15,7 +15,7 @@ import pureModel as n2
 import pdb
 import sklearn as sk
 from sklearn.model_selection import train_test_split 
-import time 
+
 
 ########################################################
 # Parameters
@@ -32,7 +32,8 @@ dataParams={'integerize':False,
             'clipLen':14, # this clips sequences to this length
             'filter':False, # this filters only sequences of this length
             'filterLen':14, #
-            'pTuple':True
+            'pTuple':True,
+            'kmeans':True
             }
 rnnControllerParams={'batch_size':64,
                      'epochs':100}
@@ -70,14 +71,14 @@ where each sequence is encoded as a string and comma separated with its count
 at current extraction is unique and count is ignored
 """
 # Files to be read
-files = [cd4A_file, cd8A_file]
+files = [cd4B_file, cd8B_file]
 
 # sequence list to be filled. Make sure file order is the same as a below
 cd4=[]
 cd8=[]
 seqs=[cd4,cd8]
 
-
+# if the data files you want only have cdr3s it has to parse it differently
 if onlyCD3:
     for index, file in enumerate(files):
         file=data+file
@@ -99,6 +100,8 @@ else:
                 threeVals=line.split(",")
                 threeVals[2]=threeVals[2].replace("\n","")
                 for i in threeVals:
+                    if i=="":
+                        continue
                     seqs[index].append(i)
 
 # at this point both cd4 and cd8 are filled with lists of sequences as strings
@@ -163,18 +166,16 @@ y8=None
 twoVals=None
 sq4=None
 sq8=None
-    
-pdb.set_trace()
+
+# creates pTuples of length three if wanted
+if dataParams['pTuple']==True:
+    if dataParams['kmeans']==True:
+        X=dp.kmeans(X)
+    else:
+        X=dp.char2ptuple(X)
 
 # shuffle data
 X, Y, sqlen = sk.utils.shuffle(X,Y,sqlen)
-
-if dataParams['pTuple']==True:
-    X=dp.char2ptuple(X)
-
-
-pdb.set_trace()
-
 
 
 xTrain, xHalf, yTrain, yHalf, sqTrain, sqHalf = train_test_split(X, Y, sqlen, test_size=0.20) 
@@ -189,9 +190,6 @@ xHalf=None
 yHalf=None
 sqHalf=None
 
-
-
-pdb.set_trace()
 
 print("Data Loaded and Ready...")
     
@@ -209,6 +207,9 @@ if train==True:
         rnnModelParams['maxLen']=xTrain.shape[1]
         nnMain=n2.Controller(rnnControllerParams, rnnModelParams) 
         print("Training NN")
+#        if dataParams['pTuple']==True:
+#            xTrain=xTrain.toarray()
+#            xVal=xVal.toarray()
         nnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
         
         

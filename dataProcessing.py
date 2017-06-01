@@ -7,6 +7,9 @@ Created on Thu May 25 11:15:56 2017
 import numpy as np
 from collections import defaultdict
 from sklearn.feature_extraction import DictVectorizer
+import atchFactors as af
+from sklearn.cluster import MiniBatchKMeans
+
 
 # putting the dictionary globally is naughty but its called so often its worth it
 intDict={ 'A': 1 ,
@@ -51,14 +54,11 @@ def char2int(seqs, longest):
     # convert to a numpy array for convenience later
     seqs=np.array(seqs)
     return seqs
-
-
-
     
 def char2ptuple(seqs):
     
     # encodes feature dictionaries as numpy vectors, needed by scikit-learn.
-    vectorizer = DictVectorizer(sparse=False)
+    vectorizer = DictVectorizer(sparse=True)
     newSeqs = vectorizer.fit_transform([event_feat(x) for x in seqs])
     return newSeqs
 
@@ -77,8 +77,58 @@ def filter(seqs, ln):
             newSeq.append(seq)
     return newSeq
     
-# Helper Functions for constructing pTuples
+#==============================================================================
+# Unsupervized clustering of pTuples using k-means    
+#==============================================================================
 
+def kmeans(seqs,n=3,sample=10000, num_clusters=100):
+    # first step is to get ptuples and replace them with atchley vectors
+    # the idea is a ptuple 1x15 from here is a data point for kmeans so we just want one big list
+    # first we want to go through each seq in the sequence
+    #n=3 # size of the tuple 
+    newSeq=[] # temp vector to fill atchely numbers in
+    for idx, seq in enumerate(seqs):
+        for i in range(len(seq)-n+1):
+            tup=seq[i:i+n]
+            tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1]),af.atchleyFactor(tup[2])))
+            newSeq.append(tup)
+            
+    newSeq=np.array(newSeq)
+    
+    
+    # for efficiency we will sample from the data and run on that (essentially boostrapping)
+    np.random.shuffle(newSeq)
+    newSeq=newSeq[:sample]
+    
+    # fit kmeans 
+    kmeans = MiniBatchKMeans(n_clusters=num_clusters, verbose=0).fit(newSeq)
+    
+    freqVec=np.zeros(num_clusters)
+    newSeqs=[]
+    # can now use this to predict points - replace 
+    for idx, seq in enumerate(seqs):
+        tuples=atch_pTuple(seq,n)
+        preds=kmeans.predict(tuples)
+        for val in preds:
+            freqVec[int(val)]+=1
+        newSeqs.append(freqVec)
+        freqVec=np.zeros(num_clusters)
+    newSeqs=np.array(newSeqs)
+    
+    return newSeqs
+    
+#==============================================================================
+# # Helper Functions for constructing pTuples
+#==============================================================================
+def atch_pTuple(seq,n=3):
+    point=[]
+    for i in range(len(seq)-n+1):
+        tup=seq[i:i+n]
+        tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1]),af.atchleyFactor(tup[2])))
+        point.append(tup)
+    point=np.array(point)
+    return point
+    
 def pTuple(vec,n=3):
     """Returns a vector of ptuples from a given sequence"""
     return [vec[i:i+n] for i in range(len(vec)-n+1)]
