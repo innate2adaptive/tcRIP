@@ -12,19 +12,25 @@ import numpy as np
 import dataProcessing as dp
 import rnnModel as r2n
 import pureModel as n2
+import autoencoderModel as ae
 import pdb
 import sklearn as sk
 from sklearn.model_selection import train_test_split 
-
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report
 
 ########################################################
 # Parameters
 ########################################################
 # big parameters
 train=True
-RNN = True
-pureNN = False
+RNN = False
+pureNN = True
 onlyCD3 = True # this means files contain CDR1/2 sequences so have to be parsed differently
+autoEncoder= True
+svm=False
+
 
 # module parameters in dictionaries
 dataParams={'integerize':False,
@@ -33,13 +39,17 @@ dataParams={'integerize':False,
             'filter':True, # this filters only sequences of this length
             'filterLen':14, #
             'pTuple':False,
+            'pTuplelen':3,
             'kmeans':False,
             'originalAtch':True
             }
-rnnControllerParams={'batch_size':128,
+ControllerParams={'batch_size':128,
                      'epochs':200}
                      
-rnnModelParams={'learningRate':0.0001,
+aeControllerParams={'batch_size':128,
+                     'epochs':200}
+                     
+ModelParams={'learningRate':0.001,
                 'embedding_size':10,
                 'vocab_size':22,
                 'cell_size':128,
@@ -120,7 +130,7 @@ Current setup is just for replacing characters with integer IDs
 longest = len(max(seqs[0], key=len))
 longest1 = len(max(seqs[1], key=len))
 longest = max([longest,longest1])
-rnnModelParams['maxLen']=longest
+ModelParams['maxLen']=longest
 
 # calculate sequence lengths for tf models
 sq4=[len(x) for x in cd4]
@@ -142,7 +152,7 @@ if dataParams['filter']==True:
     sqlen=[]
     for i in range(len(cd4)+len(cd8)):
         sqlen.append(dataParams['filterLen'])
-    rnnModelParams['maxLen']=dataParams['filterLen']
+    ModelParams['maxLen']=dataParams['filterLen']
 
 # this will replace amino acids with an integer ID specified in dataProcessing.py
 if dataParams['integerize']==True:
@@ -183,12 +193,12 @@ if dataParams['pTuple']==True:
     if dataParams['kmeans']==True:
         X=dp.kmeans(X)
     else:
-        X=dp.char2ptuple(X)
+        X=dp.char2ptuple(X, n=dataParams['pTuplelen'])
 
 # shuffle data
 X, Y, sqlen = sk.utils.shuffle(X,Y,sqlen)
 
-if RNN==True and rnnModelParams['embed']==False:
+if RNN==True and ModelParams['embed']==False:
     X=np.reshape(X,(-1,5,dataParams['filterLen']))
     
 xTrain, xHalf, yTrain, yHalf, sqTrain, sqHalf = train_test_split(X, Y, sqlen, test_size=0.20) 
@@ -210,18 +220,48 @@ print("Data Loaded and Ready...")
 # Model Setup 
 ########################################################
 if train==True:
+    if autoEncoder==True:
+        # Spool up warp drives! This gets the rnn controller class going
+        aeMain = ae.Controller(aeControllerParams, ModelParams) 
+        print("Training AE")
+        xTrain, xVal = aeMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
     if RNN==True:
         # Spool up warp drives! This gets the rnn controller class going
-        rnnMain = r2n.Controller(rnnControllerParams, rnnModelParams) 
+        rnnMain = r2n.Controller(ControllerParams, ModelParams) 
         print("Training RNN")
         rnnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
     if pureNN==True:
+        ModelParams['learningRate']=0.01
         # Spool up warp drives! This gets the normal nn controller class going
-        rnnModelParams['maxLen']=xTrain.shape[1]
-        nnMain=n2.Controller(rnnControllerParams, rnnModelParams) 
+        ModelParams['maxLen']=xTrain.shape[1]
+        nnMain=n2.Controller(ControllerParams, ModelParams) 
         print("Training NN")
         nnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
-        
+    if svm==True:
+        # grid search for best parameters for both linear and rbf kernels
+        #tuned_parameters = [{'kernel': ['rbf'], 'C': [0.5,1,1.5]}] #{'kernel': ['linear'], 'C': [1, 10, 100, 1000]}
+        tuned_parameters = [{'kernel': ['rbf'], 'C': [100,1000], 'gamma':[1e-3]}]
+        # runs grid search using the above parameter and doing 5-fold cross validation
+        clf = GridSearchCV(SVC(C=1, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=2, verbose=1)
+        print(clf)
+        # Fit the svm
+        clf.fit(xTrain, yTrain)
+        # Prints the cross validation report for the different parameters
+        print("Best parameters set found on validation set:")
+        print()
+        print(clf.best_params_)
+        print()
+        print("Grid scores on development set:")
+        print()
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            print("%0.3f (+/-%0.03f) for %r"
+                  % (mean, std * 2, params))
+        print()        
+        y_true, y_pred = yVal, clf.predict(xVal)
+        print(classification_report(y_true, y_pred))
+        print()
         
         
         

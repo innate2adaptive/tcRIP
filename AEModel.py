@@ -22,6 +22,7 @@ class Controller:
         # over network variables
         self.batch_size=qparams['batch_size']
         self.epochs = qparams['epochs']
+        self.isLoad=params['load']
         self.maxL=params['maxLen']*5
         self.learningRate=params['learningRate']
         
@@ -30,17 +31,8 @@ class Controller:
         # bootup network
         #self.model=Model(params)
         
-                                           
-    def predict_seq(self, x, phase, s):
-        """
-        Predicts values of sequence
-        """
-        loss, result=self.model.pred(x, 0, s) # the zero means its not training
-        low_vals= result < 0.5
-        result[low_vals]=0
-        high_vals=result>=0.5
-        result[high_vals]=1
-        return result
+                                          
+    
         
     def train(self, xTrain, yTrain, sqTrain, xVal, yVal, sqVal):
         """
@@ -77,45 +69,64 @@ class Controller:
         batch_size=self.batch_size # did this as copied old code
         n=xTrain.shape[0]
 
-
-        for j in range(self.epochs):
-            print('----- Epoch', j, '-----')
+        if self.isLoad:
+            train=False
+        else:
+            train=True
             
-            #Shuffle 
-            X, Y, S = sk.utils.shuffle(xTrain, yTrain, sqTrain, random_state=1)
-             
-            n=X.shape[0]            
+        if train:
+            for j in range(self.epochs):
+                print('----- Epoch', j, '-----')
+                
+                #Shuffle 
+                X, Y, S = sk.utils.shuffle(xTrain, yTrain, sqTrain, random_state=1)
+                 
+                n=X.shape[0]            
+                
+                # Training Loop
+                avg_loss = 0.0
+                
+                for i in range(n // batch_size):
+                    xT=X[i * batch_size: (i + 1) * batch_size]
+                    xT=np.reshape(xT,(-1,self.maxL))
+                    info_dict = self.inference.update(feed_dict={x_ph: xT})
+                    avg_loss += info_dict['loss']
+    
+    
+                # Print a lower bound to the average marginal likelihood for a
+                # sequence.
+                avg_loss = avg_loss / n
+                avg_loss = avg_loss / batch_size
+                print("log p(x) >= {:0.3f}".format(avg_loss))
+                
+                # Prior predictive check.
+                #seqs = sess.run(z)
+                #import pdb; pdb.set_trace()
+                #print(seqs[0])
             
-            # Training Loop
-            avg_loss = 0.0
-            
-            for i in range(n // batch_size):
-                xT=X[i * batch_size: (i + 1) * batch_size]
-                xT=np.reshape(xT,(-1,self.maxL))
-                info_dict = self.inference.update(feed_dict={x_ph: xT})
-                avg_loss += info_dict['loss']
-
-
-            # Print a lower bound to the average marginal likelihood for a
-            # sequence.
-            avg_loss = avg_loss / n
-            avg_loss = avg_loss / batch_size
-            print("log p(x) >= {:0.3f}".format(avg_loss))
-            
-            # Prior predictive check.
-            #seqs = sess.run(z)
-            #import pdb; pdb.set_trace()
-            #print(seqs[0])
+            self.inference.finalize()
+        #seqs=sess.run(z, {x_ph:X[:128]})
         
-        self.inference.finalize()
-        seqs=sess.run(z, {x_ph:X[:128]})
-        self.sess=sess
-        
-        path="models/varAE/model.ckpt"
-        if not os.path.exists(path):
-            os.mkdir(path)
+        # both saving and loading need these
         saver = tf.train.Saver()
-        saver.save(self.sess, path)
+        path="models/varAE/model.ckpt"
+        
+        # either saves the model or loads it
+        if self.isLoad:
+            saver.restore(sess,path)   
+            import pdb; pdb.set_trace()
+        else:
+            self.sess=sess
+            if not os.path.exists(path):
+                os.mkdir(path)
+            saver = tf.train.Saver()
+            saver.save(self.sess, path)
+        
+        #Shuffle 
+        X, Y, S = sk.utils.shuffle(xTrain, yTrain, sqTrain, random_state=1)
+        seqs=sess.run(x, {x_ph:X[:128]})
+        print(X[:3])
+        print(seqs[:3])
         
         return 
         

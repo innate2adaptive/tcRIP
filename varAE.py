@@ -57,8 +57,8 @@ rnnModelParams={'learningRate':0.001,
                 'batch_size':rnnControllerParams['batch_size'],
                 'conv':False,
                 'embed':False,
-                'save':True,
-                'load':False}
+                'save':False,
+                'load':True}
             
 # File names for different data; A - alpha chain, B - beta chain            
 cd4A_file = 'patient1/vDCRe_alpha_EG10_CD4_naive_alpha.txt'
@@ -218,6 +218,7 @@ if train==True:
         print("Training RNN")
         aeMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
         
+            
     if RNN==True:
         # Spool up warp drives! This gets the rnn controller class going
         rnnMain = r2n.Controller(rnnControllerParams, rnnModelParams) 

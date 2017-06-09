@@ -55,11 +55,11 @@ def char2int(seqs, longest):
     seqs=np.array(seqs)
     return seqs
     
-def char2ptuple(seqs):
+def char2ptuple(seqs, n=3):
     
     # encodes feature dictionaries as numpy vectors, needed by scikit-learn.
     vectorizer = DictVectorizer(sparse=True)
-    newSeqs = vectorizer.fit_transform([event_feat(x) for x in seqs])
+    newSeqs = vectorizer.fit_transform([event_feat(x, n) for x in seqs])
     return newSeqs
 
 
@@ -142,10 +142,10 @@ def pTuple(vec,n=3):
     """Returns a vector of ptuples from a given sequence"""
     return [vec[i:i+n] for i in range(len(vec)-n+1)]
 
-def event_feat(event):
+def event_feat(event, n=3):
     ####### Creates Dictionary ########
     result = defaultdict(float)
-    event=pTuple(event)
+    event=pTuple(event, n)
     for tup in event:      
         if "X" in tup or "Z" in tup or "U" in tup or "B" in tup :
             continue
