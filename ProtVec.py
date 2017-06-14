@@ -141,119 +141,31 @@ class Model:
         x = self.input_holder
         x = tf.cast(x,tf.float32)
         
-#        # perform nonlinear layer 
-#        x = tf.contrib.layers.fully_connected(x, 1024, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-#        if self.batch_norm==True:
-#            x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-#        x = tf.nn.elu(x, 'elu')
+        # Graph Code
         
-        if self.maxL<20:
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 8, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 4, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            
-            
-        elif self. maxL<200:
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 48, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 24, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 12, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            
-            # perform the nonlinear layer and softmax layer 
-            x = tf.contrib.layers.fully_connected(x, 6, activation_fn=None, biases_initializer=tf.zeros_initializer)
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            
-           
+        
+        
+        # Optimizer Code
+        
+        
+        
+        # spool up the session and get the variables initialized
+        sess = tf.Session()
+        sess.run(tf.global_variables_initializer())
+        
+        # both saving and loading need these
+        saver = tf.train.Saver()
+        path="models/ProtVec/model.ckpt"
+    
+        # either saves the model or loads it
+        if self.load:
+            saver.restore(sess,path)   
         else:
-        
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 512, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 128, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            
-            # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 64, activation_fn=None, biases_initializer=tf.zeros_initializer) 
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-            
-            # perform the nonlinear layer and softmax layer 
-            x = tf.contrib.layers.fully_connected(x, 32, activation_fn=None, biases_initializer=tf.zeros_initializer)
-            if self.batch_norm==True:
-                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-            x = tf.nn.elu(x, 'elu')
-        
-        x = tf.contrib.layers.fully_connected(x, 1, activation_fn=None, biases_initializer=tf.zeros_initializer)
-        
-        self.preds=tf.nn.sigmoid(x)
-        
-        with tf.name_scope("opt"):
-            # sets up learning rate decay
-            global_step = tf.Variable(0, trainable=False)
-            starter_learning_rate = self.learningRate
-            learning_rate = tf.train.exponential_decay(starter_learning_rate, global_step, 10000, 0.99, staircase=True)
-             
-            #sets ups other optimization details like gradient clipping and L2
-            lambda_loss_amount = 0.000001
-            Gradient_noise_scale = None
-            Clip_gradients = 5.0
-            # Loss, optimizer, evaluation
-            l2 = lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables() if 'bias' not in tf_var.name)
-            #  loss
-            if self.regu==True:
-                self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=self.labels_holder) + l2)
-            else:
-                self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=self.labels_holder))
-            # Gradient clipping Adam optimizer with gradient noise
-            self.train_optimizer = tf.contrib.layers.optimize_loss(
-                self.loss,
-                global_step=global_step,
-                learning_rate=learning_rate,
-                optimizer=tf.train.AdamOptimizer(learning_rate=learning_rate),
-                clip_gradients=Clip_gradients,
-                gradient_noise_scale=Gradient_noise_scale
-            )         
-
-#            optimizr=tf.train.AdamOptimizer(learning_rate=self.learningRate)
-#            
-#            self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=self.labels_holder))
-#            self.train_optimizer=optimizr.minimize(self.loss)
-            
-             # spool up the session and get the variables initialized
-            sess = tf.Session()
-            sess.run(tf.global_variables_initializer())
-
-            if self.load==True:    
-                saver = tf.train.Saver()
-                saver.restore(sess, self.path)
-            
+            self.sess=sess
+            if not os.path.exists(path):
+                os.mkdir(path)
+            saver = tf.train.Saver()
+            saver.save(self.sess, path)
         
         return sess
     

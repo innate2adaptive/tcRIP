@@ -32,7 +32,7 @@ class Controller:
         self.epochs = qparams['epochs']
         self.isLoad=params['load']
         self.maxL=params['maxLen']*5
-        self.learningRate=params['learningRate']
+        self.learningRate=qparams['learningRate']
         
         logging.info('Initialized Learner')
         
@@ -84,9 +84,9 @@ class BigModel:
         """
         Initialize the network with a set of parameters in this case params are a dict
         """
-        tf.reset_default_graph()
+        
         tf.Graph().as_default()
-
+        tf.reset_default_graph()
         
         self.save=params['save']
         self.load=params['load']
@@ -110,7 +110,10 @@ class BigModel:
         self.batch_norm=params['batch_norm']
         self.onlyLinear=params['onlyLinear']
         self.conv=params['conv']
-        self.maxL=params['maxLen']*5
+        if params['maxLen']>500:
+            self.maxL=params['maxLen']
+        else:
+            self.maxL=params['maxLen']*5
 
         # stores the session as an attribute
         self.session = self.getPartyStarted() # creates the model
@@ -122,19 +125,34 @@ class BigModel:
         """
         
         # this is the size of our encoded representations
-        encoding_dim = 16  # 32 floats 
+        encoding_dim = 8  # 32 floats 
         # this is our input placeholder
         input_seq = Input(shape=(self.maxL,))
         
-        # "encoded" is the encoded representation of the input
-        encoded = Dense(64, activation='sigmoid')(input_seq)
-        encoded = Dense(32, activation='sigmoid')(encoded)
-        encoded = Dense(encoding_dim, activation='sigmoid')(encoded)
+        if self.maxL>200:
+            # "encoded" is the encoded representation of the input
+            encoded = Dense(512, activation='sigmoid')(input_seq)
+            encoded = Dense(128, activation='sigmoid')(encoded)
+            encoded = Dense(32, activation='sigmoid')(encoded)
+            encoded = Dense(encoding_dim, activation='sigmoid')(encoded)
+            
+            # "decoded" is the lossy reconstruction of the input
+            decoded = Dense(32, activation='sigmoid')(encoded)
+            decoded = Dense(128, activation='sigmoid')(decoded)
+            decoded = Dense(512, activation='sigmoid')(decoded)
+            decoded = Dense(self.maxL, activation='sigmoid')(decoded)
+        else:
+            # "encoded" is the encoded representation of the input
+            encoded = Dense(64, activation='sigmoid')(input_seq)
+            encoded = Dense(32, activation='sigmoid')(encoded)
+            encoded = Dense(encoding_dim, activation='sigmoid')(encoded)
+            
+            # "decoded" is the lossy reconstruction of the input
+            decoded = Dense(32, activation='sigmoid')(encoded)
+            decoded = Dense(64)(decoded)
+            decoded = Dense(self.maxL)(decoded)
         
-        # "decoded" is the lossy reconstruction of the input
-        decoded = Dense(32, activation='sigmoid')(encoded)
-        decoded = Dense(64)(decoded)
-        decoded = Dense(self.maxL)(decoded)
+        
         
         
         # this model maps an input to its reconstruction

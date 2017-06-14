@@ -15,6 +15,7 @@ import pureModel as n2
 import autoencoderModel as ae
 import pdb
 import sklearn as sk
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split 
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
@@ -24,12 +25,12 @@ from sklearn.metrics import classification_report
 # Parameters
 ########################################################
 # big parameters
-train=True
-RNN = False
-pureNN = True
-onlyCD3 = True # this means files contain CDR1/2 sequences so have to be parsed differently
-autoEncoder= True
-svm=False
+train       = True
+RNN         = False
+pureNN      = False
+onlyCD3     = True # this means files contain CDR1/2 sequences so have to be parsed differently
+autoEncoder = False
+svm         = True
 
 
 # module parameters in dictionaries
@@ -38,16 +39,18 @@ dataParams={'integerize':False,
             'clipLen':14, # this clips sequences to this length
             'filter':True, # this filters only sequences of this length
             'filterLen':14, #
-            'pTuple':False,
-            'pTuplelen':3,
+            'pTuple':True,
+            'pTuplelen':2,
             'kmeans':False,
-            'originalAtch':True
+            'originalAtch':False
             }
+
 ControllerParams={'batch_size':128,
-                     'epochs':200}
+                     'epochs':100}
                      
-aeControllerParams={'batch_size':128,
-                     'epochs':200}
+aeControllerParams={'batch_size':256,
+                     'epochs':2000,
+                     'learningRate':0.01}
                      
 ModelParams={'learningRate':0.001,
                 'embedding_size':10,
@@ -116,8 +119,39 @@ else:
                         continue
                     seqs[index].append(i)
 
+
+
+    
+
+
+
+
 # at this point both cd4 and cd8 are filled with lists of sequences as strings
 # counts have been factored in
+
+# This short code block prints a graph with a bar chart histogram of the 
+# length distribution for both CD4 and CD8 sequences together.
+# Flip the boolean to enable/disable it
+lenHist=False
+if lenHist:
+    # length histogram
+    lenArr=[]
+    # create new vector of lengths 
+    for seq in cd4+cd8:
+        lenArr.append(len(seq))
+        
+    # convert list to numpy array
+    lenArr=np.asarray(lenArr)
+    
+    # bins
+    binNum=max(lenArr)-min(lenArr)
+    bins=np.arange(min(lenArr),max(lenArr))
+    plt.hist(lenArr, bins=binNum)
+    plt.xticks(bins)
+    plt.title("Sequence Length Histogram")
+    plt.xlabel("Sequence Length (AA)")
+    plt.ylabel("Frequency")
+    plt.show()
 
 ########################################################
 # Data Processing
@@ -191,12 +225,19 @@ sq8=None
 # creates pTuples of length three if wanted
 if dataParams['pTuple']==True:
     if dataParams['kmeans']==True:
-        X=dp.kmeans(X)
+        X=dp.kmeans(X, n=dataParams['pTuplelen'])
     else:
         X=dp.char2ptuple(X, n=dataParams['pTuplelen'])
 
 # shuffle data
 X, Y, sqlen = sk.utils.shuffle(X,Y,sqlen)
+
+shorten=False
+if shorten:
+    X=X[:500]
+    Y=Y[:500]
+    sqlen=sqlen[:500]
+
 
 if RNN==True and ModelParams['embed']==False:
     X=np.reshape(X,(-1,5,dataParams['filterLen']))
@@ -231,7 +272,6 @@ if train==True:
         print("Training RNN")
         rnnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
     if pureNN==True:
-        ModelParams['learningRate']=0.01
         # Spool up warp drives! This gets the normal nn controller class going
         ModelParams['maxLen']=xTrain.shape[1]
         nnMain=n2.Controller(ControllerParams, ModelParams) 
@@ -239,8 +279,7 @@ if train==True:
         nnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
     if svm==True:
         # grid search for best parameters for both linear and rbf kernels
-        #tuned_parameters = [{'kernel': ['rbf'], 'C': [0.5,1,1.5]}] #{'kernel': ['linear'], 'C': [1, 10, 100, 1000]}
-        tuned_parameters = [{'kernel': ['rbf'], 'C': [100,1000], 'gamma':[1e-3]}]
+        tuned_parameters = [{'kernel': ['rbf','linear','poly'], 'C': [1,10,100], 'gamma':[1e-2,1e0,1e2]}]
         # runs grid search using the above parameter and doing 5-fold cross validation
         clf = GridSearchCV(SVC(C=1, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=2, verbose=1)
         print(clf)

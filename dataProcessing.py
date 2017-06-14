@@ -99,7 +99,10 @@ def kmeans(seqs,n=3,sample=10000, num_clusters=100):
     for idx, seq in enumerate(seqs):
         for i in range(len(seq)-n+1):
             tup=seq[i:i+n]
-            tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1]),af.atchleyFactor(tup[2])))
+            if n==3:
+                tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1]),af.atchleyFactor(tup[2])))
+            else:
+                tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1])))
             newSeq.append(tup)
             
     newSeq=np.array(newSeq)
@@ -133,7 +136,10 @@ def atch_pTuple(seq,n=3):
     point=[]
     for i in range(len(seq)-n+1):
         tup=seq[i:i+n]
-        tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1]),af.atchleyFactor(tup[2])))
+        if n==3:
+            tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1]),af.atchleyFactor(tup[2])))
+        else:
+            tup=np.concatenate((af.atchleyFactor(tup[0]),af.atchleyFactor(tup[1])))
         point.append(tup)
     point=np.array(point)
     return point
