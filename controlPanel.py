@@ -20,7 +20,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
-
+from sklearn.metrics import accuracy_score
+from sklearn.manifold import TSNE
+from sklearn.neighbors import KNeighborsClassifier as KNN
+from matplotlib import pylab
 ########################################################
 # Parameters
 ########################################################
@@ -31,26 +34,30 @@ pureNN      = False
 onlyCD3     = True # this means files contain CDR1/2 sequences so have to be parsed differently
 autoEncoder = False
 svm         = True
-
+tSNE        = False
+knn         = True
+NBayes      = False
 
 # module parameters in dictionaries
 dataParams={'integerize':False,
             'clipping':False,
-            'clipLen':14, # this clips sequences to this length
+            'clipLen':12, # this clips sequences to this length
             'filter':True, # this filters only sequences of this length
             'filterLen':14, #
-            'pTuple':True,
+            'pTuple':False,
             'pTuplelen':2,
             'kmeans':False,
-            'originalAtch':False
+            'originalAtch':True,
+            'GloVe':False,
+            'window':True
             }
 
-ControllerParams={'batch_size':128,
-                     'epochs':100}
+ControllerParams={'batch_size':32,
+                     'epochs':10}
                      
-aeControllerParams={'batch_size':256,
-                     'epochs':2000,
-                     'learningRate':0.01}
+aeControllerParams={'batch_size':128,
+                     'epochs':500,
+                     'learningRate':0.001}
                      
 ModelParams={'learningRate':0.001,
                 'embedding_size':10,
@@ -86,7 +93,7 @@ where each sequence is encoded as a string and comma separated with its count
 at current extraction is unique and count is ignored
 """
 # Files to be read
-files = [cd4A_file, cd8A_file]
+files = [cd4B_file, cd8B_file]
 
 # sequence list to be filled. Make sure file order is the same as a below
 cd4=[]
@@ -178,7 +185,8 @@ if dataParams['clipping']==True:
     for idx, sq in enumerate(sqlen):
         if sq>dataParams['clipLen']:
             sqlen[idx]=dataParams['clipLen']
-            
+
+     
 # this will return only sequences of a set length
 if dataParams['filter']==True:
     cd4=dp.filtr(cd4, dataParams['filterLen'])
@@ -187,6 +195,21 @@ if dataParams['filter']==True:
     for i in range(len(cd4)+len(cd8)):
         sqlen.append(dataParams['filterLen'])
     ModelParams['maxLen']=dataParams['filterLen']
+
+# removes the first four AAs
+if dataParams['window']==True:
+    for idx, sq in enumerate(cd4):
+        cd4[idx]=sq[2:10]
+    for idx, sq in enumerate(cd8):
+        cd8[idx]=sq[2:10]
+
+
+#cd4=dp.expandTuples(cd4, 6)
+#cd8=dp.expandTuples(cd8, 6)
+#sq4=[len(x) for x in cd4]
+#sq8=[len(x) for x in cd8]
+#sqlen=np.concatenate((sq4,sq8))
+
 
 # this will replace amino acids with an integer ID specified in dataProcessing.py
 if dataParams['integerize']==True:
@@ -199,6 +222,9 @@ if dataParams['originalAtch']==True:
     cd4=dp.seq2fatch(cd4)
     cd8=dp.seq2fatch(cd8)
     
+if dataParams['GloVe']==True:
+    cd4=dp.GloVe(cd4, False)
+    cd8=dp.GloVe(cd8, False)
     
 # from this point it is assumed cd4/8 are NUMPY vectors
 # labels are created and then the X and Y vectors are shuffled and combo'd
@@ -212,7 +238,7 @@ Y = np.concatenate((y4,y8),0)
 X = np.concatenate((cd4,cd8),0)
 
 print("CD4 to CD8 Ratio {}:{}".format(len(cd4)/(len(cd4)+len(cd8)),len(cd8)/(len(cd4)+len(cd8))))
-
+print("Total Sequences: {}".format(len(cd4)+len(cd8)))
 # memory clean up
 cd4=None
 cd8=None
@@ -228,15 +254,16 @@ if dataParams['pTuple']==True:
         X=dp.kmeans(X, n=dataParams['pTuplelen'])
     else:
         X=dp.char2ptuple(X, n=dataParams['pTuplelen'])
+        ModelParams['maxLen']=X.shape[1]
 
 # shuffle data
 X, Y, sqlen = sk.utils.shuffle(X,Y,sqlen)
 
 shorten=False
 if shorten:
-    X=X[:500]
-    Y=Y[:500]
-    sqlen=sqlen[:500]
+    X=X[:1000]
+    Y=Y[:1000]
+    sqlen=sqlen[:1000]
 
 
 if RNN==True and ModelParams['embed']==False:
@@ -279,7 +306,7 @@ if train==True:
         nnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
     if svm==True:
         # grid search for best parameters for both linear and rbf kernels
-        tuned_parameters = [{'kernel': ['rbf','linear','poly'], 'C': [1,10,100], 'gamma':[1e-2,1e0,1e2]}]
+        tuned_parameters = [{'kernel': ['rbf'], 'C': [10], 'gamma':[1e-3]}]
         # runs grid search using the above parameter and doing 5-fold cross validation
         clf = GridSearchCV(SVC(C=1, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=2, verbose=1)
         print(clf)
@@ -301,26 +328,46 @@ if train==True:
         y_true, y_pred = yVal, clf.predict(xVal)
         print(classification_report(y_true, y_pred))
         print()
+    
+    if knn:
+        print("Training K-NN")
+        neigh=KNN(n_neighbors=1)
+        neigh.fit(xTrain, yTrain)
+        y_true, y_pred = yVal, neigh.predict(xVal)
+        print("{} Validaton Accuracy".format(accuracy_score(y_true, y_pred)))
+        print(classification_report(y_true, y_pred))
+        
+    if tSNE==True:
+        print("Running tSNE")
+        
+        tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+        two_d_embeddings_1 = tsne.fit_transform(xTrain[:10000])
+        
+        def plot(embeddings, labels):
+            assert embeddings.shape[0] >= len(labels), 'More labels than embeddings'
+            pylab.figure(figsize=(15,15))  # in inches
+            for i, label in enumerate(labels):
+                x, y = embeddings[i,:]
+
+                if label>0.5:
+                    pylab.scatter(x, y, c='b')
+                else:
+                    pylab.scatter(x, y, c='r')
+                #pylab.annotate(label, xy=(x, y), xytext=(5, 2), textcoords='offset points',  ha='right', va='bottom')
+            pylab.show()
+            return
+            
+        plot(two_d_embeddings_1, yTrain[:10000])
+#        pylab.figure(figsize=(15,15)) 
+#        for i, label in enumerate(xTrain):
+#            x, y = two_d_embeddings_1[i,:]
+#            
+#            pylab.scatter(x, y, c='b')
+#        pylab.show()
+#        
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         
         

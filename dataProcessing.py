@@ -9,6 +9,7 @@ from collections import defaultdict
 from sklearn.feature_extraction import DictVectorizer
 import atchFactors as af
 from sklearn.cluster import MiniBatchKMeans
+import pandas as pd
 
 
 # putting the dictionary globally is naughty but its called so often its worth it
@@ -35,6 +36,33 @@ intDict={ 'A': 1 ,
           'X': 21 ,
           'Z': 21 ,
           'U': 21 ,
+          '0': 0 }
+          
+          
+# putting the dictionary globally is naughty but its called so often its worth it
+intDictzero={ 'A': 0 ,
+          'C': 0 ,
+          'D': 0 ,
+          'E': 0 ,
+          'F': 0 ,
+          'G': 0 ,
+          'H': 0 ,
+          'I': 0 ,
+          'K': 0 ,
+          'L': 0 ,
+          'M': 0 ,
+          'N': 0 ,
+          'P': 0 ,
+          'Q': 0 ,
+          'R': 0 ,
+          'S': 0 ,
+          'T': 0 ,
+          'V': 0 ,
+          'W': 0 ,
+          'Y': 0 ,
+          'X': 0 ,
+          'Z': 0 ,
+          'U': 0 ,
           '0': 0 }
 
 
@@ -85,6 +113,69 @@ def seq2fatch(seqs):
         seqs[idx]=vec
     seqs=np.array(seqs)
     return seqs
+ 
+    
+def GloVe(seqs, swissprot=True):
+    
+    if swissprot==True:
+        df=pd.read_csv('embeddings/protVec_100d_3grams.csv', sep="\t" ,header=None)
+        notformatted=[]
+        for row in df.values:
+            
+            row=row[0].split("\t")
+            key=row[0]
+            vals=np.array([float(x) for x in row[1:]])
+            notformatted.append([key, vals])
+            
+        dictionary=dict(notformatted)
+    else:
+        dictionary=np.load('embeddings/dict_norm.npy')
+        dictionary=dict(dictionary.item())
+    
+    
+    
+    
+    
+    if swissprot==True:
+        for idx, seq in enumerate(seqs):
+            newSeq=np.zeros((dictionary['AAA'].shape[0]))
+            tuples=pTuple(seq)
+            for tup in tuples:
+                try:
+                    location=dictionary[tup]
+                except:
+                    location=dictionary["<unk>"]
+                newSeq+=location
+            seqs[idx]=newSeq
+    else:
+        embeddings=np.load('embeddings/embed.npy')
+        
+        for idx, seq in enumerate(seqs):
+            newSeq=np.zeros((embeddings.shape[1]))
+            tuples=pTuple(seq,4)
+            for tup in tuples:
+                try:
+                    location=dictionary[tup]
+                    
+                except:
+                    try:    
+                        location=dictionary["UNK"]
+                    except:
+                        import pdb; pdb.set_trace()
+                newSeq+=embeddings[location]
+            seqs[idx]=newSeq
+            
+    return seqs
+
+
+
+def expandTuples(seqs,n=4):
+    seqsNew=[]
+    for idx, seq in enumerate(seqs):
+        tuples=pTuple(seq,n)
+        for tup in tuples:
+            seqsNew.append(tup)
+    return seqsNew    
     
 #==============================================================================
 # Unsupervized clustering of pTuples using k-means    

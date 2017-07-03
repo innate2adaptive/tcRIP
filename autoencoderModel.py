@@ -33,7 +33,8 @@ class Controller:
         self.isLoad=params['load']
         self.maxL=params['maxLen']*5
         self.learningRate=qparams['learningRate']
-        
+
+
         logging.info('Initialized Learner')
         
         # bootup network
@@ -50,6 +51,11 @@ class Controller:
 #        
 #        xTrain=np.reshape(xTrain,(-1,timesteps,input_dim))
 #        xVal=np.reshape(xVal,(-1,timesteps,input_dim))
+        
+        
+
+        xTrain = xTrain.toarray()
+        xVal = xVal.toarray()
         
         ## need to use this command line tensorboard --logdir=/tmp/autoencoder
         self.model.autoencoder.fit(xTrain, xTrain,
@@ -110,7 +116,7 @@ class BigModel:
         self.batch_norm=params['batch_norm']
         self.onlyLinear=params['onlyLinear']
         self.conv=params['conv']
-        if params['maxLen']>500:
+        if params['maxLen']>200:
             self.maxL=params['maxLen']
         else:
             self.maxL=params['maxLen']*5
@@ -164,13 +170,26 @@ class BigModel:
         # create a placeholder for an encoded (32-dimensional) input
         encoded_input = Input(shape=(encoding_dim,))
         
-        # retrieve the last layers of the autoencoder model
-        decoder_layer1 = self.autoencoder.layers[-3]
-        decoder_layer2 = self.autoencoder.layers[-2]
-        decoder_layer3 = self.autoencoder.layers[-1]
+        if self.maxL>200:
+            
+            # retrieve the last layers of the autoencoder model
+            decoder_layer0 = self.autoencoder.layers[-4]
+            decoder_layer1 = self.autoencoder.layers[-3]
+            decoder_layer2 = self.autoencoder.layers[-2]
+            decoder_layer3 = self.autoencoder.layers[-1]
+            
+            # create the decoder model
+            self.decoder = Model(encoded_input, decoder_layer3(decoder_layer2(decoder_layer1(decoder_layer0(encoded_input)))))
+            
+        else:
         
-        # create the decoder model
-        self.decoder = Model(encoded_input, decoder_layer3(decoder_layer2(decoder_layer1(encoded_input))))
+            # retrieve the last layers of the autoencoder model
+            decoder_layer1 = self.autoencoder.layers[-3]
+            decoder_layer2 = self.autoencoder.layers[-2]
+            decoder_layer3 = self.autoencoder.layers[-1]
+            
+            # create the decoder model
+            self.decoder = Model(encoded_input, decoder_layer3(decoder_layer2(decoder_layer1(encoded_input))))
         
         self.autoencoder.compile(optimizer='adam', loss='mean_squared_error')
         
