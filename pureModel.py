@@ -147,14 +147,19 @@ class Model:
 #            x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
 #        x = tf.nn.elu(x, 'elu')
         
-        if self.maxL<20:
+        if self.maxL<26:
             # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 8, activation_fn=None, biases_initializer=tf.zeros_initializer) 
+            x = tf.contrib.layers.fully_connected(x, 32, activation_fn=None, biases_initializer=tf.zeros_initializer) 
             if self.batch_norm==True:
                 x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
             x = tf.nn.elu(x, 'elu')
             # perform nonlinear layer 
-            x = tf.contrib.layers.fully_connected(x, 4, activation_fn=None, biases_initializer=tf.zeros_initializer) 
+            x = tf.contrib.layers.fully_connected(x, 16, activation_fn=None, biases_initializer=tf.zeros_initializer) 
+            if self.batch_norm==True:
+                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
+            x = tf.nn.elu(x, 'elu')
+            # perform nonlinear layer 
+            x = tf.contrib.layers.fully_connected(x, 8, activation_fn=None, biases_initializer=tf.zeros_initializer) 
             if self.batch_norm==True:
                 x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
             x = tf.nn.elu(x, 'elu')
@@ -178,39 +183,71 @@ class Model:
 #            if self.batch_norm==True:
 #                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
 #            x = tf.nn.relu(x, 'elu')
+#
+
+
+            #import pdb; pdb.set_trace()
+            
+#            x=tf.reshape(x,(-1,14,5))
+#            x=tf.expand_dims(x,axis=3)
 #            
+#            # Convolutional Layer #1
+#            conv1 = tf.layers.conv2d(
+#                inputs=x,
+#                filters=8,
+#                kernel_size=[3, 1],
+#                padding="same",
+#                activation=tf.nn.relu)
+#            
+#            
+#            # Pooling Layer #1
+#            pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 1], strides=2)
+#            
+#            # Convolutional Layer #2 and Pooling Layer #2
+#            conv2 = tf.layers.conv2d(
+#                inputs=pool1,
+#                filters=16,
+#                kernel_size=[3, 1],
+#                padding="same",
+#                activation=tf.nn.relu)
+#            pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 1], strides=2)
+#            
+#            # Dense Layer
+#            pool2_flat = tf.reshape(pool2, [-1, 3 * 2 * 16])
+#            x = tf.layers.dense(inputs=pool2_flat, units=512, activation=tf.nn.relu)
+#                
 #            # perform the nonlinear layer and softmax layer 
-#            x = tf.contrib.layers.fully_connected(x, 60, activation_fn=None, biases_initializer=tf.zeros_initializer)
+#            x = tf.contrib.layers.fully_connected(x, 64, activation_fn=None, biases_initializer=tf.zeros_initializer)
 #            if self.batch_norm==True:
 #                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
 #            x = tf.nn.relu(x, 'elu')
-            
+#            
+#            # perform the nonlinear layer and softmax layer 
+#            x = tf.contrib.layers.fully_connected(x, 128, activation_fn=None, biases_initializer=tf.zeros_initializer)
+#            if self.batch_norm==True:
+#                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
+#            x = tf.nn.relu(x, 'elu')
+#            
             # perform the nonlinear layer and softmax layer 
-            x = tf.contrib.layers.fully_connected(x, 50, activation_fn=None, biases_initializer=tf.zeros_initializer)
+            x = tf.contrib.layers.fully_connected(x, 64, activation_fn=None, biases_initializer=tf.zeros_initializer)
+            if self.batch_norm==True:
+                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
+            x = tf.nn.relu(x, 'elu')
+#            
+            # perform the nonlinear layer and softmax layer 
+            x = tf.contrib.layers.fully_connected(x, 32, activation_fn=None, biases_initializer=tf.zeros_initializer)
             if self.batch_norm==True:
                 x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
             x = tf.nn.relu(x, 'elu')
             
-#            # perform the nonlinear layer and softmax layer 
-#            x = tf.contrib.layers.fully_connected(x, 40, activation_fn=None, biases_initializer=tf.zeros_initializer)
-#            if self.batch_norm==True:
-#                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-#            x = tf.nn.relu(x, 'elu')
-#            
-#            # perform the nonlinear layer and softmax layer 
-#            x = tf.contrib.layers.fully_connected(x, 30, activation_fn=None, biases_initializer=tf.zeros_initializer)
-#            if self.batch_norm==True:
-#                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-#            x = tf.nn.relu(x, 'elu')
-#            
-#            # perform the nonlinear layer and softmax layer 
-#            x = tf.contrib.layers.fully_connected(x, 20, activation_fn=None, biases_initializer=tf.zeros_initializer)
-#            if self.batch_norm==True:
-#                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
-#            x = tf.nn.relu(x, 'elu')
+            # perform the nonlinear layer and softmax layer 
+            x = tf.contrib.layers.fully_connected(x, 16, activation_fn=None, biases_initializer=tf.zeros_initializer)
+            if self.batch_norm==True:
+                x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
+            x = tf.nn.relu(x, 'elu')
             
             # perform the nonlinear layer and softmax layer 
-            x = tf.contrib.layers.fully_connected(x, 10, activation_fn=None, biases_initializer=tf.zeros_initializer)
+            x = tf.contrib.layers.fully_connected(x, 8, activation_fn=None, biases_initializer=tf.zeros_initializer)
             if self.batch_norm==True:
                 x = tf.contrib.layers.batch_norm(x, center=True, scale=True, is_training=self.phase_holder) 
             x = tf.nn.relu(x, 'elu')
@@ -318,7 +355,6 @@ class Model:
         """
         Performs a single prediction based on the currently trainined model
         """     
-    
         if str(type(x))=="<class 'scipy.sparse.csr.csr_matrix'>":
             x=x.toarray()
         loss, pred_probs = self.session.run(

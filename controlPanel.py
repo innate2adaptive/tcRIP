@@ -24,18 +24,22 @@ from sklearn.metrics import accuracy_score
 from sklearn.manifold import TSNE
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from matplotlib import pylab
+import glob
+
+
+
 ########################################################
 # Parameters
 ########################################################
 # big parameters
 train       = True
-RNN         = False
+RNN         = True
 pureNN      = False
 onlyCD3     = True # this means files contain CDR1/2 sequences so have to be parsed differently
 autoEncoder = False
-svm         = True
+svm         = False
 tSNE        = False
-knn         = True
+knn         = False
 NBayes      = False
 
 # module parameters in dictionaries
@@ -52,14 +56,14 @@ dataParams={'integerize':False,
             'window':True
             }
 
-ControllerParams={'batch_size':32,
-                     'epochs':10}
+ControllerParams={'batch_size':128,
+                     'epochs':100}
                      
 aeControllerParams={'batch_size':128,
                      'epochs':500,
                      'learningRate':0.001}
                      
-ModelParams={'learningRate':0.001,
+ModelParams={'learningRate':0.005,
                 'embedding_size':10,
                 'vocab_size':22,
                 'cell_size':128,
@@ -84,6 +88,44 @@ cd4B_file = 'patient1/vDCRe_beta_EG10_CD4_naive_beta.txt'
 cd8B_file = 'patient1/vDCRe_beta_EG10_CD8_naive_beta.txt'
 data = 'data/'
 extra = 'extra/'
+
+
+
+########################################################
+# Get all Files from USB
+########################################################
+
+files=glob.glob("F:/seqs/*.cdr3")
+
+# sequence list to be filled. Make sure file order is the same as a below
+cd4=[]
+cd8=[]
+seqs=[cd4,cd8]
+
+def dataExtractor(file):
+    # this extracts unique CDR3s from .cdr3 files that arnt gzipped
+    seqz=[]
+    with open(file,'r') as infile:
+        # goes through each of the files specified in read mode and pulls out 
+        # each line and formats it so a list gets X copies of the sequence 
+        for line in infile:
+            twoVals=line.split(", ")
+            twoVals[1]=twoVals[1].replace("\n","")
+            seqz.append(twoVals[0])
+    return seqz
+# Three patients KS07, SK11, EG10
+
+for fil in files:
+    if "beta" in fil and "naive" in fil and "EG10" in fil:
+        print(fil)
+        seqz=dataExtractor(fil)
+        if "CD4" in fil:
+            for seq in seqz: cd4.append(seq)
+        else:
+            for seq in seqz: cd8.append(seq)
+
+        
+
 ########################################################
 # Data Retrieval 
 ########################################################
@@ -92,40 +134,40 @@ The data for the first patient is stored in the 'data/patient1' file
 where each sequence is encoded as a string and comma separated with its count
 at current extraction is unique and count is ignored
 """
-# Files to be read
-files = [cd4B_file, cd8B_file]
-
-# sequence list to be filled. Make sure file order is the same as a below
-cd4=[]
-cd8=[]
-seqs=[cd4,cd8]
-
-# if the data files you want only have cdr3s it has to parse it differently
-if onlyCD3:
-    for index, file in enumerate(files):
-        file=data+file
-        with open(file,'r') as infile:
-            # goes through each of the files specified in read mode and pulls out 
-            # each line and formats it so a list gets X copies of the sequence 
-            for line in infile:
-                twoVals=line.split(", ")
-                twoVals[1]=twoVals[1].replace("\n","")
-                for i in range(int(twoVals[1])):
-                    seqs[index].append(twoVals[0])
-else:
-    for index, file in enumerate(files):
-        file=data+extra+file
-        with open(file,'r') as infile:
-            # goes through each of the files specified in read mode and pulls out 
-            # each line adds each sequence from the line 
-            for line in infile:
-                threeVals=line.split(",")
-                threeVals[2]=threeVals[2].replace("\n","")
-                for i in threeVals:
-                    if i=="":
-                        continue
-                    seqs[index].append(i)
-
+## Files to be read
+#files = [cd4B_file, cd8B_file]
+#
+## sequence list to be filled. Make sure file order is the same as a below
+#cd4=[]
+#cd8=[]
+#seqs=[cd4,cd8]
+#
+## if the data files you want only have cdr3s it has to parse it differently
+#if onlyCD3:
+#    for index, file in enumerate(files):
+#        file=data+file
+#        with open(file,'r') as infile:
+#            # goes through each of the files specified in read mode and pulls out 
+#            # each line and formats it so a list gets X copies of the sequence 
+#            for line in infile:
+#                twoVals=line.split(", ")
+#                twoVals[1]=twoVals[1].replace("\n","")
+#                for i in range(int(twoVals[1])):
+#                    seqs[index].append(twoVals[0])
+#else:
+#    for index, file in enumerate(files):
+#        file=data+extra+file
+#        with open(file,'r') as infile:
+#            # goes through each of the files specified in read mode and pulls out 
+#            # each line adds each sequence from the line 
+#            for line in infile:
+#                threeVals=line.split(",")
+#                threeVals[2]=threeVals[2].replace("\n","")
+#                for i in threeVals:
+#                    if i=="":
+#                        continue
+#                    seqs[index].append(i)
+#
 
 
     
@@ -306,7 +348,7 @@ if train==True:
         nnMain.train(xTrain, yTrain, sqTrain, xVal, yVal, sqVal)
     if svm==True:
         # grid search for best parameters for both linear and rbf kernels
-        tuned_parameters = [{'kernel': ['rbf'], 'C': [10], 'gamma':[1e-3]}]
+        tuned_parameters = [{'kernel': ['rbf'], 'C': [0.1,1,10,100], 'gamma':[1e-3,1e-2,1e-1]}]
         # runs grid search using the above parameter and doing 5-fold cross validation
         clf = GridSearchCV(SVC(C=1, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=2, verbose=1)
         print(clf)
@@ -324,10 +366,11 @@ if train==True:
         for mean, std, params in zip(means, stds, clf.cv_results_['params']):
             print("%0.3f (+/-%0.03f) for %r"
                   % (mean, std * 2, params))
-        print()        
+        print()
         y_true, y_pred = yVal, clf.predict(xVal)
         print(classification_report(y_true, y_pred))
         print()
+        
     
     if knn:
         print("Training K-NN")

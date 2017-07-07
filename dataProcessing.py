@@ -10,7 +10,7 @@ from sklearn.feature_extraction import DictVectorizer
 import atchFactors as af
 from sklearn.cluster import MiniBatchKMeans
 import pandas as pd
-
+import sklearn as sk
 
 # putting the dictionary globally is naughty but its called so often its worth it
 intDict={ 'A': 1 ,
@@ -249,7 +249,36 @@ def event_feat(event, n=3):
         result[tup]+=1
     return result
 
-                               
+#==============================================================================
+# # Helper Functions DataSet Creation
+#==============================================================================                              
+def dataCreator(cd4,cd8):
+    # from this point it is assumed cd4/8 are NUMPY vectors
+    # labels are created and then the X and Y vectors are shuffled and combo'd
+    # extra contains a list of anything else to be shuffled
+    y4=np.zeros((len(cd4)))
+    y8=np.zeros((len(cd8)))
+    y4[:]=0
+    y8[:]=1
     
+    # combine classes
+    Y = np.concatenate((y4,y8),0)
+    X = np.concatenate((cd4,cd8),0)
+    
+    
+    
+    return X, Y
+    
+def printClassBalance(y):
+    # this assumes y contains binary classes of 1 and 0
+    y1=0
+    y0=0
+    for yi in y:
+        if yi==1:
+            y1+=1
+        else:
+            y0+=1
+    print("Class Balance {}:{}".format(y1/(y1+y0),y0/(y1+y0)))
+    print("Class Sizes   {}:{}".format(y1,y0))
     
     
