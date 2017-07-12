@@ -30,6 +30,10 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split 
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier as KNN
+import glob
+from sklearn.manifold import TSNE
+
+from matplotlib import pylab
 
 ########################################################
 # Parameters
@@ -45,7 +49,7 @@ data = 'data/'
 extra = 'VandJ/'
 
 graphs=False
-
+files = [cd4B_file, cd8B_file]
 
 ########################################################
 # Data Retrieval 
@@ -56,16 +60,21 @@ where each sequence is encoded as a string and comma separated with its count
 at current extraction is unique and count is ignored
 """
 
-# Files to be read
-files = [cd4B_file, cd8B_file]
+#files=glob.glob("F:/seqs/*.txt")
+#cd4, cd8 = dp.dataReader(files, ["naive","beta"])
+
 
 # sequence list to be filled. Make sure file order is the same as a below
 cd4=[]
 cd8=[]
 seqs=[cd4,cd8]   # this contains the sequences 
+
 cd4vj=[]
 cd8vj=[]
 vj=[cd4vj,cd8vj] # this contains the v and j index genes
+
+
+
 
 for index, file in enumerate(files):
     file=data+extra+file
@@ -90,10 +99,10 @@ CD4=0
 CD8=1
 
 # SPECIFY HERE
-CD=CD4
+CD=CD8
 
 
-for row in vj[CD4]:
+for row in vj[CD]:
     v.append(int(row[0]))
     j.append(int(row[1]))
     
@@ -133,7 +142,7 @@ if graphs:
     plt.xlabel("J Gene Index")
     plt.ylabel("Frequency")
     plt.show()
-
+    
 
 #df = pandas.DataFrame.from_dict(letter_counts, orient='index')
 #df.plot(kind='bar')
@@ -142,13 +151,15 @@ if graphs:
 #x_axis.set_visible(False)
 #plt.show()
 #plt.close()
-#
+
 
 
 # Chose 1 specific V region (start with a more common one) and then plot the 
 # use of each triplet in the CDR3 in a sample of CD4 and CD8 cells (ranked 
 # according to differential usage ?).
-
+#==============================================================================
+ 
+#==============================================================================
 Vcounter=Counter(v)
 print(Vcounter.most_common(2)[1])
 # for CD4 this is 15 : TRBV20-1|Homo
@@ -289,6 +300,53 @@ for seq in seqs8:
         seqs8_14.append(seq)
 seqs4_14_=seqs4_14.copy()
 seqs8_14_=seqs8_14.copy()
+
+
+
+
+
+
+
+#==============================================================================
+# tSNE within a VJ combo region
+#==============================================================================
+
+
+
+seqs4_14_=dp.seq2fatch(seqs4_14_) 
+seqs8_14_=dp.seq2fatch(seqs8_14_) 
+
+
+tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+
+# use function to create data
+X, y = dp.dataCreator(seqs4_14_,seqs8_14_)
+
+# shuffle data
+X, y = sk.utils.shuffle(X,y)
+
+two_d_embeddings_1 = tsne.fit_transform(X)
+
+def plot(embeddings, labels):
+    assert embeddings.shape[0] >= len(labels), 'More labels than embeddings'
+    pylab.figure(figsize=(15,15))  # in inches
+    for i, label in enumerate(labels):
+        x, y = embeddings[i,:]
+
+        if label>0.5:
+            pylab.scatter(x, y, c='b')
+        else:
+            pylab.scatter(x, y, c='r')
+        #pylab.annotate(label, xy=(x, y), xytext=(5, 2), textcoords='offset points',  ha='right', va='bottom')
+    
+    pylab.show()
+    return
+    
+plot(two_d_embeddings_1, y)
+
+pdb.set_trace()
+
+
 
 
 intDictIndex={ 'A': 1 ,
