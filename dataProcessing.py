@@ -482,7 +482,7 @@ def subNames(file, c):
             # this leaves [family, subfamily]
             dic[idx]=line
     return dic
-    
+          
 def getVJnames(chain='beta', path='data/tags/'):
     """
     This generates a dictionary of the family and subfamily of v and j genes
