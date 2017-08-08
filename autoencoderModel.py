@@ -31,7 +31,7 @@ class Controller:
         self.batch_size=qparams['batch_size']
         self.epochs = qparams['epochs']
         self.isLoad=params['load']
-        self.maxL=params['maxLen']*5
+        self.maxL=params['maxLen']
         self.learningRate=qparams['learningRate']
 
 
@@ -42,7 +42,7 @@ class Controller:
         
                                          
         
-    def train(self, xTrain, yTrain, sqTrain, xVal, yVal, sqVal):
+    def train(self, xTrain, yTrain, xVal, yVal):
         """
         Runs through the set number of epochs or until its killed
         """
@@ -54,8 +54,8 @@ class Controller:
         
         
 
-        xTrain = xTrain.toarray()
-        xVal = xVal.toarray()
+        #xTrain = xTrain.toarray()
+        #xVal = xVal.toarray()
         
         ## need to use this command line tensorboard --logdir=/tmp/autoencoder
         self.model.autoencoder.fit(xTrain, xTrain,
@@ -116,11 +116,8 @@ class BigModel:
         self.batch_norm=params['batch_norm']
         self.onlyLinear=params['onlyLinear']
         self.conv=params['conv']
-        if params['maxLen']>200:
-            self.maxL=params['maxLen']
-        else:
-            self.maxL=params['maxLen']*5
-
+        self.maxL=params['maxLen']
+        
         # stores the session as an attribute
         self.session = self.getPartyStarted() # creates the model
         #self.session = self.lstmVersion()

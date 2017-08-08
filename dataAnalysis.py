@@ -81,12 +81,19 @@ else:
                         continue
                     seqs[index].append(i)
 
+                    
+                    
+
+                    
+                    
+                    
+                    
+                    
 
 print("CD4 to CD8 Ratio {}:{}".format(len(cd4)/(len(cd4)+len(cd8)),len(cd8)/(len(cd4)+len(cd8))))
 print("Total Sequences: {}".format(len(cd4)+len(cd8)))
-
     
-
+pdb.set_trace()
 
 ########################################################
 # Length Histogram 

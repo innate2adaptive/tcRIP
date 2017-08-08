@@ -48,7 +48,7 @@ cd8B_file = 'patient1/vDCRe_beta_EG10_CD8_naive_beta.dcrcdr3'
 data = 'data/'
 extra = 'VandJ/'
 
-graphs=False
+graphs=True
 files = [cd4B_file, cd8B_file]
 
 ########################################################

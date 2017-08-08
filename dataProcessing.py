@@ -12,6 +12,10 @@ from sklearn.cluster import MiniBatchKMeans
 import pandas as pd
 import sklearn as sk
 from tqdm import tqdm
+import glob
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2
+
 
 # putting the dictionary globally is naughty but its called so often its worth it
 intDict={ 'A': 1 ,
@@ -68,12 +72,13 @@ intDictzero={ 'A': 0 ,
 
 
 
-def char2int(seqs, longest):
+def char2int(seqs, longest, pad=True):
     """converts all characters in a sequnce to integer IDs based on a dict"""
     # iterate through sequences
     for index, seq in enumerate(seqs):
         # pad sequence with zeros to get to the longest length
-        seq=seq.ljust(longest,'0')
+        if pad:
+            seq=seq.ljust(longest,'0')
         # temporary var for storing int seq before replacement
         numseq=[]
         # go character by character and fill new list with numeric values
@@ -81,7 +86,8 @@ def char2int(seqs, longest):
             numseq.append(intDict[char])
         seqs[index]=numseq
     # convert to a numpy array for convenience later
-    seqs=np.array(seqs)
+    if pad:
+        seqs=np.array(seqs)
     return seqs
     
 def char2ptuple(seqs, n=3):
@@ -177,6 +183,39 @@ def expandTuples(seqs,n=4):
         for tup in tuples:
             seqsNew.append(tup)
     return seqsNew    
+    
+    
+#==============================================================================
+#  One - Hot Related Functions    
+#==============================================================================
+    
+def oneHot(seqs):
+    newSeqs=[]
+    for seq in seqs:
+        newSeq=[]
+        for char in seq:
+            zeros=np.zeros((20))
+            zeros[char-1]=1
+            newSeq.append(zeros)
+        newSeqs.append(newSeq)
+    return newSeqs
+
+def oneHot2AA(seqs):
+    newSeqs=[]
+    inv_map = {v: k for k, v in intDict.items()}
+    for seq in seqs:
+        newSeq=[]
+        for onehot in seq:
+            newSeq.append(inv_map[np.argmax(onehot)+1])
+        newSeqs.append(newSeq)
+    return newSeqs    
+    
+    
+    
+    
+    
+    
+    
     
 #==============================================================================
 # Unsupervized clustering of pTuples using k-means    
@@ -299,7 +338,7 @@ def dataSpliter(cd, combine=True):
         vj=[]
         seqs=[]
         for line in cd:
-            vj.append([line[0],line[0]])
+            vj.append([int(line[0]),int(line[1])])
             seqs.append(line[4])
         return  seqs, vj
     else:
@@ -307,8 +346,8 @@ def dataSpliter(cd, combine=True):
         j=[]
         seqs=[]
         for line in cd:
-            v.append(line[0])
-            j.append(line[1])
+            v.append(int(line[0]))
+            j.append(int(line[1]))
             seqs.append(line[4])
         return  seqs, v, j
     return
@@ -339,15 +378,23 @@ def printClassBalance(y):
             y1+=1
         else:
             y0+=1
-    print("Class Balance {}:{}".format(y1/(y1+y0),y0/(y1+y0)))
-    print("Class Sizes   {}:{}".format(y1,y0))
+    print("Class Balance CD8:CD4 {}:{}".format(y1/(y1+y0),y0/(y1+y0)))
+    print("Class Sizes   CD8:CD4 {}:{}".format(y1,y0))
+
+def printClassBalanceV2(cd4, cd8):
+    print("CD4 to CD8 Ratio {}:{}".format(len(cd4)/(len(cd4)+len(cd8)),len(cd8)/(len(cd4)+len(cd8))))
+    print("Class Sizes      {}:{}".format(len(cd4),len(cd8)))
+    print("Total Sequences: {}".format(len(cd4)+len(cd8)))
+    return None
+    
+    
     
 def removeDup(cd4, cd8, v4, v8):
     """ 
     This takes two lists of strings and removes the common sequences between 
     the two, and returns them as a separate string for analytics
     """
-    print("Removing Shared Sequences")
+    #print("Removing Shared Sequences")
     # set up dictionaries so we have the mapping of seq to v
     dicCD4={}
     dicCD8={}
@@ -364,10 +411,10 @@ def removeDup(cd4, cd8, v4, v8):
     v4new=[dicCD4[seq] for seq in newCD4]    
     v8new=[dicCD8[seq] for seq in newCD8]    
 
-
+    print("Joint Seqs: {}".format(len(joint)))
     return newCD4, newCD8, v4new, v8new, joint
     
-    
+
 #==============================================================================
 # Data Loaders    
 #==============================================================================
@@ -375,6 +422,21 @@ def removeDup(cd4, cd8, v4, v8):
 """
 Hard coding the links to the data is sloppy but its easy
 """
+
+
+def loadAllPatients(delim=["naive","beta"]):
+    files=glob.glob("F:/seqs/*.txt")
+    cd4, cd8 = dataReader(files,delim)
+    
+    # focus on just sequence and v region
+    cd4,cd4vj = dataSpliter(cd4)
+    cd8,cd8vj = dataSpliter(cd8)
+    
+    # sequence list to be filled. Make sure file order is the same as a below
+    seqs=[cd4,cd8]   # this contains the sequences 
+    vj=[cd4vj,cd8vj] 
+    return seqs, vj
+
 
 
 def extraCDs():
@@ -502,6 +564,105 @@ def getVJnames(chain='beta', path='data/tags/'):
     vd=subNames(vFile, 'v')
     
     return jd, vd
+    
+def dictEncoder(seqss, vj, filtr=True, clip=True, filtrLen=14):
+    """
+    Takes output of loadAllPatients() and creates a dataset dictionary that maps
+    a seq. Also expects no duplicates or they'l get overridden anyways
+    
+    Also will only clip if filtering
+    """    
+    mapper={}
+    for idx, seqs in enumerate(seqss): # this goes CD4 then CD8
+        for idx2, seq in enumerate(seqs): # this goes individual cdrs
+            if filtr:
+                if len(seq)==filtrLen:
+                    if clip:
+                        seq=seq[2:10] # get rid of the first two and last 4
+                    if idx==0: # CD4
+                        mapper[seq]=['CD4', vj[idx][idx2][:]]
+                    else:
+                        mapper[seq]=['CD8', vj[idx][idx2][:]]
+                    
+            else:
+                if idx==0: # CD4
+                    mapper[seq]=['CD4', vj[idx][idx2][:]]
+                else:
+                    mapper[seq]=['CD8', vj[idx][idx2][:]]
+    return mapper    
+    
+    
+#==============================================================================
+#  Graphs     
+#==============================================================================
+
+def venn(cd4, cd8, joint ,Title="for Complete Dataset"):
+    plt.figure(figsize=(10,10))
+    v = venn2(subsets = (cd4, cd8, joint), set_labels=('CD4 Sequences', 'CD8 Sequences'))
+    plt.title("CD4/CD8 Class sizes "+Title)
+    return None
+
+def lenHisto(cd4, cd8, Title):
+    # length histogram
+    lenArr=[]
+    # create new vector of lengths 
+    for seq in cd4+cd8:
+        lenArr.append(len(seq))
+        
+    # convert list to numpy array
+    lenArr=np.asarray(lenArr)
+    
+    # bins
+    binNum=max(lenArr)-min(lenArr)
+    bins=np.arange(min(lenArr),max(lenArr))-0.5
+    plt.figure(figsize=(10,5))
+    binLabs=list(map(int,bins+0.5))
+    binLabs=[x-1 for x in binLabs]
+    
+
+    # setup graph
+    plt.hist(lenArr, bins=binNum, edgecolor="black")
+    plt.xticks(bins,binLabs)
+    plt.xlim([1,max(lenArr)])
+    plt.title("Sequence Length Histogram"+" "+Title)
+    plt.xlabel("Sequence Length (AA)")
+    plt.ylabel("Frequency")
+    plt.show()
+
+def standardHisto(seqs, Title, xlabel, size):
+    # this expects a list of preformated numerics
+    
+    # convert list to numpy array
+    lenArr=np.asarray(seqs)
+    
+    # bins
+    binNum=max(lenArr)-min(lenArr)
+    bins=np.arange(min(lenArr),max(lenArr))+0.5
+    plt.figure(figsize=size)
+    binLabs=list(map(int,bins+0.5))
+    binLabs=[x-1 for x in binLabs]
+    binLabs=list(map(str,binLabs))
+        
+    # setup graph
+    plt.hist(lenArr, bins=binNum, edgecolor="black")
+    plt.xticks(bins,binLabs)
+    #plt.xlim([0,max(lenArr)+1])
+    plt.title(Title)
+    plt.xlabel(xlabel)
+    plt.ylabel("Frequency")
+    plt.show()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

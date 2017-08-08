@@ -115,11 +115,13 @@ CDR1_8=[]
 or12=0# this specs either cdr1 or cdr2
 limit=5
 
+
 for row in cd4:
     if len(row[or12])==limit and len(row[1])==6: CDR1_4.append(row[or12])
 for row in cd8:
     if len(row[or12])==limit and len(row[1])==6: CDR1_8.append(row[or12])
-
+    
+pdb.set_trace()
 
 CDR1_4=dp.seq2fatch(CDR1_4)
 CDR1_8=dp.seq2fatch(CDR1_8)
