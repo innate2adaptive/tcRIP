@@ -56,7 +56,7 @@ afterV=False
 nn=False
 svm=False
 EG10=True# this means only data from patient EG10
-feature_select=False
+feature_select=True
     
 ########################################################
 # Data Retrieval 
@@ -198,9 +198,10 @@ if secondary:
         from sklearn.feature_selection import SelectKBest
         from sklearn.feature_selection import f_classif
         from sklearn.feature_selection import mutual_info_classif #best
-        sel=SelectKBest(mutual_info_classif, k=110)
+        pdb.set_trace()
+        sel=SelectKBest(f_classif, k=110)
         X = sel.fit_transform(X, y)
-        
+        pdb.set_trace()
     
     
     # print class balances

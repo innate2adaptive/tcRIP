@@ -128,7 +128,7 @@ class BigModel:
         """
         
         # this is the size of our encoded representations
-        encoding_dim = 8  # 32 floats 
+        encoding_dim = 4  # 32 floats 
         # this is our input placeholder
         input_seq = Input(shape=(self.maxL,))
         
