@@ -21,7 +21,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
 
-
+from imblearn.over_sampling import SMOTE
 
 from xgboost import XGBClassifier
 
@@ -35,7 +35,7 @@ from sklearn.neighbors import KNeighborsClassifier as KNN
 #==============================================================================
 
 # load in sequences and vj info for all patients with naive and beta chains
-seqs, vj = dp.loadAllPatients()
+seqs, vj = dp.loadAllPatients(['naive','beta'])
 
 # filter out joint sequences
 seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj[1])
@@ -47,11 +47,12 @@ print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0
 #==============================================================================
 # Parameters
 #==============================================================================
-squish = True
+squish = False
 loadCDR12 = False
-includeV=False
+includeV= True
 length=14
 vlen=0
+SM=True # Run SMOTE?
 #==============================================================================
 # Feat. Eng.
 #==============================================================================
@@ -83,60 +84,73 @@ else:
 seqs[0]=dp.filtr(seqs[0], length*5+vlen)
 seqs[1]=dp.filtr(seqs[1], length*5+vlen)
 
-##### carefulto turf 
-seqs[1]=seqs[1][:23000]
-import pdb; pdb.set_trace()
-
 # use function to create data
 X, y = dp.dataCreator(seqs[0],seqs[1])
+
+# comment this out if you dont want to focus on one CDR
+#X=X[:,-1] # 95: is the CDR1, 70:95 is CDR2, :70 is cdr3
+#X=np.expand_dims(X,1)
 
 # shuffle data
 X, y = sk.utils.shuffle(X,y)
 
 
+   
 if squish:
-    X=X[:100000]
-    y=y[:100000]
+    X=X[:1000]
+    y=y[:1000]
 
 # print class balances
 dp.printClassBalance(y)
 
+
 # 25% Validation set
 xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20) 
+
+if SM:
+   os=SMOTE() 
+   xTrain, yTrain = os.fit_sample(xTrain,yTrain)
+
 
 #==============================================================================
 # Adaboost
 #==============================================================================
-#
-#print("======================================")
-#print("Running Classification using AdaBoost")
-## Set up an adaboost Classifer
-#clf = AdaBoostClassifier(n_estimators=100)
-#
-## Fit the booster
-#clf.fit(xTrain, yTrain)
-#
-## Prints the validation accuracy
-#y_true, y_pred = yVal, clf.predict(xVal)
-#accuracy = accuracy_score(y_true, y_pred)
-#print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+
+print("======================================")
+print("Running Classification using AdaBoost")
+# Set up an adaboost Classifer
+clf = AdaBoostClassifier(n_estimators=100)
+
+# Fit the booster
+clf.fit(xTrain, yTrain)
+
+# Prints the validation accuracy
+y_true, y_pred = yVal, clf.predict(xVal)
+accuracy = accuracy_score(y_true, y_pred)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+print(classification_report(yVal,y_pred))
+
+y_true, y_pred = yVal, clf.predict_proba(xVal)
 
 #==============================================================================
 # XGBoost
 #==============================================================================
-print("======================================")
-print("Running Classification using XGBoost")
+#print("======================================")
+#print("Running Classification using XGBoost")
+#
+#model = XGBClassifier(n_estimators=100,reg_lambda=1)
+#
+#model.fit(xTrain, yTrain)
+##print(model)
+#y_pred = model.predict(xVal)
+#predictions = [round(value) for value in y_pred]
+#
+#accuracy = accuracy_score(yVal, predictions)
+#print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+#print(classification_report(yVal,y_pred))
+#
+#
 
-model = XGBClassifier(n_estimators=100,reg_lambda=1)
-
-model.fit(xTrain, yTrain)
-#print(model)
-y_pred = model.predict(xVal)
-predictions = [round(value) for value in y_pred]
-
-accuracy = accuracy_score(yVal, predictions)
-print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
-print(classification_report(yVal,y_pred))
 
 
 #==============================================================================

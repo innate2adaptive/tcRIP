@@ -56,7 +56,7 @@ seqs, vj = dp.loadAllPatients(delim) # these gets all the sequences and vj value
 #==============================================================================
 # Basic Analytics
 #==============================================================================
-runhisto=False
+runhisto=True
 if runhisto:
     # filter out joint sequences
     seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj[1])
@@ -72,11 +72,14 @@ if runhisto:
     dp.standardHisto(vj[0][:,1], Title="CD4 J Gene Usage", xlabel="J Gene Usage by Index", size=[5,5])
     dp.standardHisto(vj[1][:,1], Title="CD8 J Gene Usage", xlabel="J Gene Usage by Index", size=[5,5])
     
+    dp.standardHistoV2(vj[0][:,1],vj[1][:,1], Title="J Gene Usage", xlabel="J Gene Usage by Index", size=[5,5])
+    
     # print the V Gene usage CD8
     dp.standardHisto(vj[0][:,0], Title="CD4 V Gene Usage", xlabel="V Gene Usage by Index", size=[15,5])
     dp.standardHisto(vj[1][:,0], Title="CD8 V Gene Usage", xlabel="V Gene Usage by Index", size=[15,5])
 
-
+    dp.standardHistoV2(vj[0][:,0],vj[1][:,0], Title="V Gene Usage", xlabel="V Gene Usage by Index", size=[15,5])
+    
 #==============================================================================
 # Analysis of V-J region being used
 #==============================================================================
@@ -120,7 +123,7 @@ X, y = dp.dataCreator(newCD4,newCD8)
 #==============================================================================
 # Run tSNE 
 #==============================================================================
-runVJtsne=True
+runVJtsne=False
 if runVJtsne:
     print("Running tSNE")       
     tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000, verbose=1)

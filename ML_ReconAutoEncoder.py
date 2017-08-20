@@ -18,7 +18,10 @@ import dataProcessing as dp
 import sklearn as sk
 import pdb
 
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import BaggingClassifier
 
+from imblearn.over_sampling import SMOTE
 
 from tensorflow.contrib import slim
 
@@ -98,7 +101,7 @@ sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 
 batch_size=M
-n_epoch = 50
+n_epoch = 10
 for j in range(n_epoch):
     print('----- Epoch', j, '-----')
     
@@ -152,11 +155,38 @@ X, y = sk.utils.shuffle(X_data,y)
 X_data=None        
 xTrain, xVal, yTrain, yVal = train_test_split(X, y, test_size=0.20) 
 
-neigh=KNN(n_neighbors=5)
-neigh.fit(xTrain, yTrain)
-y_true, y_pred = yVal, neigh.predict(xVal)
-print("{} Validaton Accuracy".format(accuracy_score(y_true, y_pred)))
-print(classification_report(y_true, y_pred))
+#neigh=KNN(n_neighbors=5)
+#neigh.fit(xTrain, yTrain)
+#y_true, y_pred = yVal, neigh.predict(xVal)
+#print("{} Validaton Accuracy".format(accuracy_score(y_true, y_pred)))
+#print(classification_report(y_true, y_pred))
+
+
+
+os=SMOTE() 
+xTrain, yTrain = os.fit_sample(xTrain,yTrain)
+
+
+#==============================================================================
+# Adaboost
+#==============================================================================
+
+print("======================================")
+print("Running Classification using AdaBoost")
+# Set up an adaboost Classifer
+clf = AdaBoostClassifier(n_estimators=100)
+
+# Fit the booster
+clf.fit(xTrain, yTrain)
+
+# Prints the validation accuracy
+y_true, y_pred = yVal, clf.predict(xVal)
+accuracy = accuracy_score(y_true, y_pred)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+print(classification_report(yVal,y_pred))
+
+
+
 
 
 

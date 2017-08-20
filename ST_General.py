@@ -45,7 +45,7 @@ else:
     delim = ["naive",chain] #other delimiters
 
 
-seqs, vj = dp.loadAll(delim) # these gets all the sequences and vj values
+seqs, vj = dp.loadAllPatients(delim) # these gets all the sequences and vj values
 
 #==============================================================================
 # Basic Analytics
@@ -70,7 +70,7 @@ dp.venn(len(seqs[0]), len(seqs[1]), len(joint))
 #==============================================================================
 # Sequence length histograms
 #==============================================================================
-dp.lenHisto(seqs[0], seqs[1], Title=("for"+" "+patient+" "+"Dataset"))
+dp.lenHisto(seqs[0], seqs[1], Title=("for"+" "+patient[0]+" "+"Dataset"))
 
 
 

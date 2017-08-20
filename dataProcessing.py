@@ -617,7 +617,7 @@ def lenHisto(cd4, cd8, Title):
     bins=np.arange(min(lenArr),max(lenArr))-0.5
     plt.figure(figsize=(10,5))
     binLabs=list(map(int,bins+0.5))
-    binLabs=[x-1 for x in binLabs]
+    binLabs=[x-2 for x in binLabs]
     
 
     # setup graph
@@ -642,7 +642,7 @@ def standardHisto(seqs, Title, xlabel, size):
     binLabs=list(map(int,bins+0.5))
     binLabs=[x-1 for x in binLabs]
     binLabs=list(map(str,binLabs))
-        
+    
     # setup graph
     plt.hist(lenArr, bins=binNum, edgecolor="black")
     plt.xticks(bins,binLabs)
@@ -653,8 +653,40 @@ def standardHisto(seqs, Title, xlabel, size):
     plt.show()
     
     
+def standardHistoV2(seqs1, seqs2, Title, xlabel, size):
+    # this expects a list of preformated numerics
     
+    # convert list to numpy array
+    lenArr4=np.asarray(seqs1)
+    lenArr8=np.asarray(seqs2)
     
+    # bins
+    binNum4=max(lenArr4)-min(lenArr4)
+    binNum8=max(lenArr8)-min(lenArr8)
+    
+    hist4=np.histogram(lenArr4,binNum4, density=True)
+    hist8=np.histogram(lenArr8,binNum8, density=True)
+    
+    plt.figure(figsize=size)
+    plt.bar(np.arange(0,binNum4)+0.2,hist4[0],width=0.4,color='b',align='center',label='CD4',edgecolor="black")
+    plt.bar(np.arange(0,binNum4)-0.2,hist8[0],width=0.4,color='g',align='center',label='CD8',edgecolor="black")
+    plt.legend(loc='best')
+    
+#    binLabs=list(map(int,bins+0.5))
+#    binLabs=[x-1 for x in binLabs]
+#    binLabs=list(map(str,binLabs))
+#        
+#    
+#    
+#    # setup graph
+#    plt.hist(lenArr, bins=binNum, edgecolor="black")
+#    
+    plt.xticks(np.arange(0,binNum4))
+    plt.xlim([-1,binNum4+1])
+    plt.title(Title)
+    plt.xlabel(xlabel)
+    plt.ylabel("Frequency")
+    plt.show()    
     
     
     

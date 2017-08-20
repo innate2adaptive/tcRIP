@@ -130,11 +130,11 @@ plt.xticks(np.arange(6),['5','6','7','8','9','10'])
 plt.yticks(np.arange(20),['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'])
 plt.show()
 
-plt.imshow(np.abs(Prob4.T[:,4:10]-Prob8.T[:,4:10]), cmap='plasma')
+plt.imshow(Prob4.T[:]-Prob8.T[:], cmap='plasma')
 plt.title('Difference in AA usage for 14 long AAs')
 plt.xlabel('AA Position')
 plt.ylabel('Amino Acid')
-plt.xticks(np.arange(6),['5','6','7','8','9','10'])
+plt.xticks(np.arange(14))
 plt.yticks(np.arange(20),['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'])
 plt.show()
 
@@ -152,13 +152,7 @@ def charForProb(seqs,dic):
     return newSeqs
 
 
-#X_Prob=charForProb(X_char,dl)
-top=np.subtract(Prob4,Prob8)
-top=np.square(top)
-bottom=Prob4+Prob8
-x=np.divide(top,bottom)
-x=np.sum(x,1)
-print(np.average(x[1:12]))
+
 
 
 
