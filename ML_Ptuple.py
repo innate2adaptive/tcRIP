@@ -21,6 +21,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
+from sklearn.feature_selection import SelectFromModel
+from sklearn.feature_selection import SelectFromModel
 
 from scipy.sparse import hstack
 
@@ -49,10 +51,11 @@ print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0
 # Parameters
 #==============================================================================
 
-squish = True
-loadCDR12 = False
+squish = False
+loadCDR12 = True
 length = 14
 tuplen = 2
+secondaryClass= True # Take the feature importance vals  from Ada and run SVM
 
 print("p = {}".format(tuplen))
 
@@ -131,19 +134,30 @@ xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20)
 # Adaboost
 #==============================================================================
 
-#print("======================================")
-#print("Running Classification using AdaBoost")
-## Set up an adaboost Classifer
-#clf = AdaBoostClassifier(n_estimators=100)
-#
-## Fit the booster
-#clf.fit(xTrain, yTrain)
-#
-## Prints the validation accuracy
-#y_true, y_pred = yVal, clf.predict(xVal)
-#accuracy = accuracy_score(y_true, y_pred)
-#print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+print("======================================")
+print("Running Classification using AdaBoost")
+# Set up an adaboost Classifer
+clf = AdaBoostClassifier(n_estimators=100)
 
+# Fit the booster
+clf.fit(xTrain, yTrain)
+
+# Prints the validation accuracy
+y_true, y_pred = yVal, clf.predict(xVal)
+accuracy = accuracy_score(y_true, y_pred)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+
+if secondaryClass:
+    selec = SelectFromModel(clf, prefit=True, threshold=0.01)
+    xTrain = selec.transform(xTrain)
+    xVal = selec.transform(xVal)
+
+    svm=SVC(C=10, gamma=0.01, class_weight='balanced',decision_function_shape='ovr')
+    svm.fit(xTrain, yTrain)
+    y_true, y_pred = yVal, svm.predict(xVal)
+    accuracy = accuracy_score(y_true, y_pred)
+    print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+    print(classification_report(yVal,y_pred))
 
 #==============================================================================
 # XGBoost
@@ -164,45 +178,45 @@ xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20)
 #==============================================================================
 # SVM
 #==============================================================================
-print("======================================")
-print("Running Classification using SVM")
-## grid search for best parameters for both linear and rbf kernels
-##tuned_parameters = [{'kernel': ['rbf'], 'C': [0.1,1,10,100], 'gamma':[1e-3,1e-2,1e-1]}]
-## runs grid search using the above parameter and doing 5-fold cross validation
-##clf = GridSearchCV(SVC(C=1, gamma=0.01, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=2, verbose=1)
-##print(clf)
-## Fit the svm
+#print("======================================")
+#print("Running Classification using SVM")
+### grid search for best parameters for both linear and rbf kernels
+###tuned_parameters = [{'kernel': ['rbf'], 'C': [0.1,1,10,100], 'gamma':[1e-3,1e-2,1e-1]}]
+### runs grid search using the above parameter and doing 5-fold cross validation
+###clf = GridSearchCV(SVC(C=1, gamma=0.01, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=2, verbose=1)
+###print(clf)
+### Fit the svm
+##
+##
+#clf=SVC(C=1, gamma=0.01, class_weight='balanced',decision_function_shape='ovr')
+##n_estimators=10
+###clf=BaggingClassifier(SVC(kernel='linear', class_weight='balanced'), max_samples=1.0 / n_estimators, n_estimators=n_estimators)
+##
 #
+#clf.fit(xTrain, yTrain)
 #
-clf=SVC(C=1, gamma=0.01, class_weight='balanced',decision_function_shape='ovr')
-#n_estimators=10
-##clf=BaggingClassifier(SVC(kernel='linear', class_weight='balanced'), max_samples=1.0 / n_estimators, n_estimators=n_estimators)
+### Prints the cross validation report for the different parameters
+##print("Best parameters set found on validation set:")
+###print()
+###print(clf.best_params_)
+###print()
+###print("Grid scores on development set:")
+###print()
+###means = clf.cv_results_['mean_test_score']
+###stds = clf.cv_results_['std_test_score']
+###for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+###    print("%0.3f (+/-%0.03f) for %r"
+###          % (mean, std * 2, params))
+###print()    
+#    
+#y_true, y_pred = yVal, clf.predict(xVal)
 #
-
-clf.fit(xTrain, yTrain)
-
-## Prints the cross validation report for the different parameters
-#print("Best parameters set found on validation set:")
-##print()
-##print(clf.best_params_)
-##print()
-##print("Grid scores on development set:")
-##print()
-##means = clf.cv_results_['mean_test_score']
-##stds = clf.cv_results_['std_test_score']
-##for mean, std, params in zip(means, stds, clf.cv_results_['params']):
-##    print("%0.3f (+/-%0.03f) for %r"
-##          % (mean, std * 2, params))
+##print(classification_report(y_true, y_pred))
+##
 ##print()    
-    
-y_true, y_pred = yVal, clf.predict(xVal)
-
-#print(classification_report(y_true, y_pred))
 #
-#print()    
-
-accuracy = accuracy_score(y_true, y_pred)
-print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+#accuracy = accuracy_score(y_true, y_pred)
+#print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
 
 #==============================================================================
 # NN
@@ -256,15 +270,15 @@ print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
 # NN
 #==============================================================================
 
-print("======================================")
-print("Running Classification using k-NN")
-
-model = KNN(n_neighbors=5)
-
-model.fit(xTrain, yTrain)
-#print(model)   
-y_pred = model.predict(xVal)
-predictions = [round(value) for value in y_pred]
-
-accuracy = accuracy_score(yVal, predictions)
-print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+#print("======================================")
+#print("Running Classification using k-NN")
+#
+#model = KNN(n_neighbors=5)
+#
+#model.fit(xTrain, yTrain)
+##print(model)   
+#y_pred = model.predict(xVal)
+#predictions = [round(value) for value in y_pred]
+#
+#accuracy = accuracy_score(yVal, predictions)
+#print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))

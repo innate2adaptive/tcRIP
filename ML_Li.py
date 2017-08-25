@@ -20,6 +20,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import BaggingClassifier
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectFromModel
 
 from imblearn.over_sampling import SMOTE
 
@@ -48,11 +50,12 @@ print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0
 # Parameters
 #==============================================================================
 squish = False
-loadCDR12 = False
+loadCDR12 = True
 includeV= True
 length=14
 vlen=0
-SM=True # Run SMOTE?
+SM=False # Run SMOTE?
+secondaryClass= False # Take the feature importance vals  from Ada and run SVM
 #==============================================================================
 # Feat. Eng.
 #==============================================================================
@@ -92,20 +95,20 @@ X, y = dp.dataCreator(seqs[0],seqs[1])
 #X=np.expand_dims(X,1)
 
 # shuffle data
-X, y = sk.utils.shuffle(X,y)
+X, y = sk.utils.shuffle(X,y,random_state=42)
 
 
-   
+# reduces training set size
 if squish:
-    X=X[:1000]
-    y=y[:1000]
+    X_new=X[:round(158944*0.4)]
+    y_new=y[:round(158944*0.4)]
 
 # print class balances
 dp.printClassBalance(y)
 
 
 # 25% Validation set
-xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20) 
+xTrain, xVal, yTrain, yVal= train_test_split(X_new, y_new, test_size=0.20) 
 
 if SM:
    os=SMOTE() 
@@ -116,40 +119,55 @@ if SM:
 # Adaboost
 #==============================================================================
 
-print("======================================")
-print("Running Classification using AdaBoost")
-# Set up an adaboost Classifer
-clf = AdaBoostClassifier(n_estimators=100)
-
-# Fit the booster
-clf.fit(xTrain, yTrain)
-
-# Prints the validation accuracy
-y_true, y_pred = yVal, clf.predict(xVal)
-accuracy = accuracy_score(y_true, y_pred)
-print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
-print(classification_report(yVal,y_pred))
-
-y_true, y_pred = yVal, clf.predict_proba(xVal)
-
-#==============================================================================
-# XGBoost
-#==============================================================================
 #print("======================================")
-#print("Running Classification using XGBoost")
+#print("Running Classification using AdaBoost")
+## Set up an adaboost Classifer
+#clf = AdaBoostClassifier(n_estimators=100)
 #
-#model = XGBClassifier(n_estimators=100,reg_lambda=1)
+## Fit the booster
+#clf.fit(xTrain, yTrain)
 #
-#model.fit(xTrain, yTrain)
-##print(model)
-#y_pred = model.predict(xVal)
-#predictions = [round(value) for value in y_pred]
-#
-#accuracy = accuracy_score(yVal, predictions)
+## Prints the validation accuracy
+#y_true, y_pred = yVal, clf.predict(xVal)
+#accuracy = accuracy_score(y_true, y_pred)
 #print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
 #print(classification_report(yVal,y_pred))
 #
 #
+#
+#
+#
+#if secondaryClass:
+#    selec = SelectFromModel(clf, prefit=True, threshold=0.02)
+#    xTrain = selec.transform(xTrain)
+#    xVal = selec.transform(xVal)
+#
+#    svm=SVC(C=10, gamma=0.01, class_weight='balanced',decision_function_shape='ovr')
+#    svm.fit(xTrain, yTrain)
+#    y_true, y_pred = yVal, svm.predict(xVal)
+#    accuracy = accuracy_score(y_true, y_pred)
+#    print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+#    print(classification_report(yVal,y_pred))
+#
+#==============================================================================
+# XGBoost
+#==============================================================================
+
+print("======================================")
+print("Running Classification using XGBoost")
+
+model = XGBClassifier(n_estimators=100,reg_lambda=1)
+
+model.fit(xTrain, yTrain)
+#print(model)
+y_pred = model.predict(xVal)
+predictions = [round(value) for value in y_pred]
+
+accuracy = accuracy_score(yVal, predictions)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+print(classification_report(yVal,y_pred))
+
+
 
 
 

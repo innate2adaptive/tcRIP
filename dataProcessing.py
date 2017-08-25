@@ -212,11 +212,6 @@ def oneHot2AA(seqs):
     
     
     
-    
-    
-    
-    
-    
 #==============================================================================
 # Unsupervized clustering of pTuples using k-means    
 #==============================================================================
@@ -445,30 +440,37 @@ def extraCDs():
     cdr1 and cdr2
     """
     # File names for different data; A - alpha chain, B - beta chain            
-    cd4A_file = 'patient1/vDCRe_alpha_EG10_CD4_naive_alpha.txt'
-    cd8A_file = 'patient1/vDCRe_alpha_EG10_CD8_naive_alpha.txt'
-    cd4B_file = 'patient1/vDCRe_beta_EG10_CD4_naive_beta.txt'
-    cd8B_file = 'patient1/vDCRe_beta_EG10_CD8_naive_beta.txt'
-    data = 'data/'
-    extra = 'extra/'
+    #cd4A_file = 'patient1/vDCRe_alpha_EG10_CD4_naive_alpha.txt'
+    #cd8A_file = 'patient1/vDCRe_alpha_EG10_CD8_naive_alpha.txt'
+    #cd4B_file = 'patient1/vDCRe_beta_EG10_CD4_naive_beta.txt'
+    #cd8B_file = 'patient1/vDCRe_beta_EG10_CD8_naive_beta.txt'
+    #data = 'data/'
+    #extra = 'extra/'
     # Files to be read
-    files = [cd4B_file, cd8B_file]
+    #files = [cd4B_file, cd8B_file]
+    
+    files=glob.glob("F:/maz/*.txt")
     
     # sequence list to be filled. Make sure file order is the same as a below
     cd4=[]
     cd8=[]
     seqs=[cd4,cd8]   # this contains the sequences 
-
+    
+        
+    
     for index, file in enumerate(files):
-            file=data+extra+file
+            #file=data+extra+file
             with open(file,'r') as infile:
                 # goes through each of the files specified in read mode and pulls out 
                 # each line adds each sequence from the line 
                 for line in infile:
                     threeVals=line.split(",")
                     threeVals[2]=threeVals[2].replace("\n","")
-                    seqs[index].append(threeVals)
-    
+                    if "CD4" in file:
+                        seqs[0].append(threeVals)
+                    else:
+                        seqs[1].append(threeVals)
+                   
     # not going to worry about repeats for now
     cddict={}
     for cd in seqs:

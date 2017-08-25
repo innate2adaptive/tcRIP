@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import dataProcessing as dp
 import pdb
 import seaborn as sns 
+import sklearn as sk
 
 from collections import defaultdict
 from collections import Counter
@@ -30,6 +31,16 @@ from collections import Counter
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 from matplotlib import pylab
+
+
+from sklearn.model_selection import train_test_split 
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+
+from xgboost import XGBClassifier
+
+from imblearn.over_sampling import SMOTE
+
 
 #==============================================================================
 # Get the data
@@ -56,7 +67,7 @@ seqs, vj = dp.loadAllPatients(delim) # these gets all the sequences and vj value
 #==============================================================================
 # Basic Analytics
 #==============================================================================
-runhisto=True
+runhisto=False
 if runhisto:
     # filter out joint sequences
     seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj[1])
@@ -95,6 +106,7 @@ X_char=list(seq_mapper.keys()) # get the seqs
 
 # get the vjs amd convert them to strings which are put in a counter
 vjs=[str(x[1][0])+','+str(x[1][1]) for x in list(seq_mapper.values())]
+
 # The most common cluster with 3874 examples is 15,12
 vjc=Counter(vjs)
 newCD4s=[]
@@ -201,10 +213,66 @@ if runTsne:
     
     sns.jointplot(x=two_d_embeddings_1[:,0], y=two_d_embeddings_1[:,1], kind='kde', maringal_kws=dict(n_levels=30))
     plt.show()
+  
     
+#==============================================================================
+#  Run classification on Just V and J 
+#==============================================================================
     
+# use function to create data
+X, y = dp.dataCreator(vj[0],vj[1])
+
+# shuffle data
+X, y = sk.utils.shuffle(X,y)
+
+# print class balances
+dp.printClassBalance(y)
+
+# 20% Validation set
+xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20) 
     
-    
-    
+print("======================================")
+print("Running Classification using XGBoost")
+
+model = XGBClassifier(n_estimators=100,reg_lambda=1)
+os=SMOTE() 
+xTrain, yTrain = os.fit_sample(xTrain,yTrain)
+model.fit(xTrain, yTrain)
+y_pred = model.predict(xVal)
+predictions = [round(value) for value in y_pred]
+
+accuracy = accuracy_score(yVal, predictions)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+
+# now do for just v
+X_new=np.expand_dims(X[:,0],1)
+# 20% Validation set
+xTrain, xVal, yTrain, yVal= train_test_split(X_new, y, test_size=0.20) 
+os=SMOTE() 
+xTrain, yTrain = os.fit_sample(xTrain,yTrain)
+model.fit(xTrain, yTrain)
+#print(model)
+y_pred = model.predict(xVal)
+predictions = [round(value) for value in y_pred]
+
+accuracy = accuracy_score(yVal, predictions)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+
+# now do for just j
+X_new=np.expand_dims(X[:,1],1)
+# 20% Validation set
+xTrain, xVal, yTrain, yVal= train_test_split(X_new, y, test_size=0.20) 
+os=SMOTE() 
+xTrain, yTrain = os.fit_sample(xTrain,yTrain)
+model.fit(xTrain, yTrain)
+#print(model)
+y_pred = model.predict(xVal)
+predictions = [round(value) for value in y_pred]
+
+accuracy = accuracy_score(yVal, predictions)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+
+
+
     
     

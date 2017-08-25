@@ -66,71 +66,30 @@ seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj
 seqs[0]=dp.char2int(seqs[0], 14, pad=False)
 seqs[1]=dp.char2int(seqs[1], 14, pad=False)
 
+for idx0,seqz in enumerate(seqs):
+    for idx, seq in enumerate(seqz):
+        seqs[idx0][idx].append(21)
 cd4t,cd4v=train_test_split(seqs[0], test_size=0.2)
 cd8t,cd8v=train_test_split(seqs[1], test_size=0.2)
 
-# format test set
-xtest, ytest = dp.dataCreator(cd4t,cd8t)
-#xtest=xtest.tolist()
-
-xtest, ytest= sk.utils.shuffle(xtest,ytest)
-
-
+# need to make 21 the end token
 
 #==============================================================================
-# Training two HMMS, one for each class
+#  Calculate transition matrix
 #==============================================================================
-#CD4 sequences
-lenArr=[]
-for idx, seq in enumerate(cd4t):
-    lenArr.append(len(seq)) # get the length
-lenArr=np.array(lenArr)        
 
 
-# init the HMM
-hmm4=hmm.MultinomialHMM(n_components=20,
-                        random_state=42,
-                        verbose=1)
+az=cd4t
+b = np.zeros((21,21)) # empty matrix to be filled
 
-# fit with Baum-Welch
-
-
-lb=LabelEncoder().fit([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20])
-for idx, seq in enumerate(cd4t):
-    seq=lb.transform(seq)
-    seq=np.atleast_2d(seq).T
-    cd4t[idx]=seq
-
-pdb.set_trace()
+for a in az: # go through each sequence
+    for (x,y), c in Counter(zip(a, a[1:])).items(): # go through each counter a
+        b[x-1,y-1] += c
+# normalize the rows
+row_sums = b.sum(axis=1)
+new_matrix = b / row_sums[:, np.newaxis]
 
 
-
-hmm4.fit(np.atleast_2d(cd4t).T,lenArr)
-
-
-
-
-
-
-#CD84 sequences
-lenArr=[]
-for idx, seq in enumerate(cd4t):
-        lenArr.append(len(seq)) # get the length
-        cd8t[idx]=list(seq)     # convert to get the characters
-
-
-# init the HMM
-hmm8=hmm.MultinomialHMM(n_components=20,
-                        random_state=42,
-                        verbose=1)
-# fit with Baum-Welch
-hmm8.fit(cd8t,lenArr)
-
-# get the posterior prob of val set
-y_pred4=hmm4.predict_proba(xtest)
-y_pred8=hmm8.predict_proba(xtest)
-
-
-
+print(b)
 
 
