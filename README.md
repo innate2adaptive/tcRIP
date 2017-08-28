@@ -14,14 +14,35 @@ git clone https://github.com/Groovy-Dragon/tcRIP
 
 ### Prerequisites
 
-These scripts use python 3.5 and a variety of libraries. 
+These scripts use python 3.5 and a variety of libraries. The following are for general usage of the scripts:
 
 <ul>
-    <li> asdf </li>
-    <li> asdf </li>
-    <li> asdf </li>
-    <li> asdf </li>
-    <li> asdf </li>
+    <li> Biopython 1.68 </li>
+    <li> nltk 3.2.1 </li>
+    <li> numpy 1.12.1 </li>
+    <li> pandas 0.19.2 </li>
+    <li> scipy 0.18.1 </li>
+    <li> tqdm 4.11.2 - this is not entirely neccessary and can run without in most scripts</li> 
+</ul>
+
+These libraries are for the various plot generation functions and scripts:
+
+<ul>
+    <li> Matplotlib 2.0.0 </li>
+    <li> Matplotlib-Venn 0.11.5 </li>
+    <li> MPLD3 0.2 </li>
+    <li> Seaborn 3.4.0.3 </li> 
+</ul>
+
+These libraries are specifically for the machine learning operations like feature engineering and classification:
+
+<ul>
+    <li> Edward 1.3.2 </li>
+    <li> Imbalanced-Learn 0.2.1 </li>
+    <li> Keras 2.0.4 </li>
+    <li> Scikit-Learn 0.18.1 </li>
+    <li> Tensorflow 1.1.0 </li>
+    <li> XGBoost 0.6 </li>
 </ul>
 
 ### Installing
