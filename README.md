@@ -95,7 +95,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 * **Lewis Moffat** - *Initial work* - [Groovy-Dragon](https://github.com/Groovy-Dragon)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/Groovy-Dragon/tcRIP/contributors) who participated in this project.
 
 ## License
 
