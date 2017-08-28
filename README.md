@@ -2,14 +2,10 @@
 
 This is the code for the MSc Thesis: "Classification of TCR&beta; Repertoire between CD4<sup>+</sup> and CD8<sup>+</sup> T-Cell Populations"
 
-This code has been written by Lewis Iain Moffat in partial completion of the MSc Machine Learning awarded by University College London, Department of Computer Science. 
-
-# Project Title
-
-One Paragraph of project description goes here
+This code has been written by Lewis Iain Moffat in partial completion of the MSc Machine Learning awarded by University College London, Department of Computer Science. This project used a Machine Learning approach to classifying T-Cell Receptor data as either having come from CD4 or CD8 T-Cell lineages. This is done through a combination of feature engineering methods classification algorithms.
 
 ## Getting Started
-
+Due to this being a 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
