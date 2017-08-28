@@ -14,11 +14,15 @@ git clone https://github.com/Groovy-Dragon/tcRIP
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+These scripts use python 3.5 and a variety of libraries. 
 
-```
-Give examples
-```
+<ul>
+    <i> asdf
+     <i> asdf
+      <i> asdf
+       <i> asdf
+        <i> asdf
+</ul>
 
 ### Installing
 
