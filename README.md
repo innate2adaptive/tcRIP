@@ -83,19 +83,9 @@ Explain what these tests test and why
 Give an example
 ```
 
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+Please feel free to submit a pull requests.
 
 ## Versioning
 
@@ -103,7 +93,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Lewis Moffat** - *Initial work* - [Groovy-Dragon](https://github.com/Groovy-Dragon)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
@@ -113,6 +103,5 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
+* My Primary Supervisor: Prof. Benny Chain, UCL Division of Immunology, [Innate2Adaptive](http://www.innate2adaptive.com/)
+* My Secondary Supervisro: Prof. John Shawe-Talyor, [Head of UCL Computer Science Department](http://www0.cs.ucl.ac.uk/staff/j.shawe-taylor/)
