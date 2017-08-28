@@ -65,11 +65,15 @@ import dataProcessing as dp
 
 
 # load in sequences and vj info for all patients with naive and beta chains
-seqs, vj = dp.loadAllPatients(['naive','beta'])
+# if you want to get specific patient data add the patient name as a string to the list argument e.g. 'KS07', 'SK11', 'EG10'
+seqs, vj = dp.loadAllPatients(['naive','beta']) 
 
 # filter out joint sequences
 seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj[1])
+# seqs[0] contains the CD4 sequences, and seqs[1] contains the CD8; vice versa with the v and j gene indexes in vj
+# joint contains the sequences that are shared
 
+# print the number of shared sequences as a number and percent
 print("Number of Shared Seqs: {}".format(len(joint)))
 print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0))
 
