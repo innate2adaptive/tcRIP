@@ -45,34 +45,36 @@ These libraries are specifically for the machine learning operations like featur
     <li> XGBoost 0.6 </li>
 </ul>
 
-### Installing
+### File Names
+Due to the modular nature of this work the majority of the scripts are standalone. 
+NEED TO COMPLETE THIS
 
-A step by step series of examples that tell you have to get a development env running
 
-Say what the step will be
+## Running the Code
 
+The following section describes the basics of using some of the underlying functions.
+
+### Load the Data
+First import the [data processing](../blob/master/dataProcessing.py) script which contains a large number of data loaders, feature engineering functions, and conveniance functions. 
+
+```python
+import dataProcessing as dp
 ```
-Give the example
-```
 
-And repeat
+```python
 
-```
-until finished
-```
 
-End with an example of getting some data out of the system or using it for a little demo
+# load in sequences and vj info for all patients with naive and beta chains
+seqs, vj = dp.loadAllPatients(['naive','beta'])
 
-## Running the tests
+# filter out joint sequences
+seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj[1])
 
-Explain how to run the automated tests for this system
+print("Number of Shared Seqs: {}".format(len(joint)))
+print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0))
 
-### Break down into end to end tests
 
-Explain what these tests test and why
 
-```
-Give an example
 ```
 
 ### And coding style tests
