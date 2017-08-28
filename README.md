@@ -61,7 +61,7 @@ First import the [data processing](../blob/master/dataProcessing.py) script whic
 import dataProcessing as dp
 ```
 
-Now use the following code block to load the sequences and filter out the CDR3s that are in both classes. Note that this will load the data from the data records file (../blob/master/data_records). 
+Now use the following code block to load the sequences and filter out the CDR3s that are in both classes. Note that this will load the data from the data records file (../blob/master/data_records). Note that although the V and J genes are provided in separate lists they match to the sequences by index. 
 ```python
 
 
@@ -79,7 +79,17 @@ print("Number of Shared Seqs: {}".format(len(joint)))
 print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0))
 ```
 
-If you want to load in the CDR1 and CDR2 
+If you want to load in the CDR1 and CDR2 sequences it is done by loading a dictionary which when called extracts the CDR1 and CDR2 from data files. Note that some of the CDR1s are 5 amino acids long, compared to the vast majority which are 6 amino acids long. Due to length invariance this very small number is filtered out.
+
+```python
+# add extrac cds by getting the dicitionary
+cddict=dp.extraCDs()
+# use the dictionary to add the sequences together. This concatenates the CDR1 and CDR2 to the CDR3 in one big string. This string is then the CDR3+CDR2+CDR1. 
+seqs[0], vj[0]=dp.addCDextra(seqs[0],vj[0],cddict)
+seqs[1], vj[1]=dp.addCDextra(seqs[1],vj[1],cddict)
+```
+From this point you are free to use your own feature engineering or the provided functions. 
+
 
 
 ### And coding style tests
@@ -106,7 +116,7 @@ See also the list of [contributors](https://github.com/Groovy-Dragon/tcRIP/contr
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
 
 ## Acknowledgments
 
