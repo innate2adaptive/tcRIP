@@ -61,6 +61,7 @@ First import the [data processing](../blob/master/dataProcessing.py) script whic
 import dataProcessing as dp
 ```
 
+Now use the following code block to load the sequences and filter out the CDR3s that are in both classes. Note that this will load the data from the data records file (../blob/master/data_records). 
 ```python
 
 
@@ -76,10 +77,10 @@ seqs[0], seqs[1], vj[0], vj[1], joint = dp.removeDup(seqs[0], seqs[1], vj[0], vj
 # print the number of shared sequences as a number and percent
 print("Number of Shared Seqs: {}".format(len(joint)))
 print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0))
-
-
-
 ```
+
+If you want to load in the CDR1 and CDR2 
+
 
 ### And coding style tests
 
