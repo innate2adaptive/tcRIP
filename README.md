@@ -17,11 +17,11 @@ git clone https://github.com/Groovy-Dragon/tcRIP
 These scripts use python 3.5 and a variety of libraries. 
 
 <ul>
-    <i> asdf
-     <i> asdf
-      <i> asdf
-       <i> asdf
-        <i> asdf
+    <li> asdf </li>
+    <li> asdf </li>
+    <li> asdf </li>
+    <li> asdf </li>
+    <li> asdf </li>
 </ul>
 
 ### Installing
