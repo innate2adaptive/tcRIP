@@ -66,7 +66,7 @@ Now use the following code block to load the sequences and filter out the CDR3s 
 
 
 # load in sequences and vj info for all patients with naive and beta chains
-# if you want to get specific patient data add the patient name as a string to the list argument e.g. 'KS07', 'SK11', 'EG10'
+# if you want to get specific patient data add the patient name as a string to the list argument e.g. 'HV1', 'HV2', or 'HV3'
 seqs, vj = dp.loadAllPatients(['naive','beta']) 
 
 # filter out joint sequences
