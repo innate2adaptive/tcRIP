@@ -129,7 +129,7 @@ You'll notice that the output of these vectors is a scipy conpressed matrix. All
 seqs[0]=seqs[0].tocsr()
 seqs[1]=seqs[1].tocsr()
 ```
-For an example of p-Tuple classification see the (p-Tuple script)[../blob/master/ML_Ptuple]. Another method for feature engineering is using protein embeddings vectors. These embeddings are either the SwissProt trained methods provided by (Asgari and Mofrad)[http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0141287] (2015) or the custom embeddings trained on this dataset. New embeddings can also be trained using the (ProtVec script)[../blob/master/UL_ProtVec.py]. 
+For an example of p-Tuple classification see the (p-Tuple script)[../blob/master/ML_Ptuple.py]. Another method for feature engineering is using protein embeddings vectors. These embeddings are either the SwissProt trained methods provided by (Asgari and Mofrad)[http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0141287] (2015) or the custom embeddings trained on this dataset. New embeddings can also be trained using the (ProtVec script)[../blob/master/UL_ProtVec.py]. 
 
 
 ### Dataset Pre-Processing
