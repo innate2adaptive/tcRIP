@@ -8,6 +8,9 @@ This script implements the feature reduction technique from Cinelli et al. 2017
 That uses a 1-dimensional Gaussian Naive Bayes to calculate the value of
 features.
 
+Based on 
+https://academic.oup.com/bioinformatics/article/33/7/951/2883387/Feature-selection-using-a-one-dimensional-naive
+
 """
 
 #==============================================================================

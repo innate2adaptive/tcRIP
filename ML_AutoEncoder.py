@@ -6,7 +6,7 @@ Created on Thu Aug  3 11:58:21 2017
 
 
 This script runs an AutoEncoder network on all the data for a specified Feat.
-Engineering methods
+Engineering methods. 
 
 """
 
@@ -72,6 +72,7 @@ def createCDR(seqs,length):
 #==============================================================================
 
 if method=="Li":
+    # filter the sequnces
     seqs[0]=dp.filtr(seqs[0], 14)
     seqs[1]=dp.filtr(seqs[1], 14)
     

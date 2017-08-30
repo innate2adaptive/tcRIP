@@ -3,6 +3,11 @@
 Created on Tue Aug  1 17:05:48 2017
 
 @author: lewismoffat
+
+This generates heat maps of amino acids used in different positions of a 
+sequence of set length e.g. 14 AA long. It also generates some basic stats 
+of the most common V-J combo.
+
 """
 
 #==============================================================================
@@ -49,7 +54,7 @@ if sepVJ:
     newCD8s=[]
     for key in list(seq_mapper.keys()):
         row=seq_mapper[key]
-        if row[1]==[15,12]:
+        if row[1]==[15,12]: # the most common combo
             if row[0]=="CD4":
                 newCD4s.append(key)
             else:

@@ -3,12 +3,17 @@
 Created on Thu May 25 12:06:33 2017
 
 @author: lewismoffat
-"""
+
+
+This contains the class code for the AutoEncoder model. This is used by 
+ML_AutoEncoder which takes the CDRs which are already feature engineered and 
+tries to reconstruct them. 
 
 """
-Code by Lewis Moffat
 
-"""
+#==============================================================================
+# IMPORTS
+#==============================================================================
 
 import tensorflow as tf
 import logging
@@ -20,6 +25,9 @@ from keras.layers import Input, Dense, LSTM, RepeatVector
 from keras.models import Model
 from keras.callbacks import TensorBoard
 
+#==============================================================================
+#  CONTROLLER CLASS WHICH IS A WRAPPER FOR THE MODEL CLASS
+#==============================================================================
 
 class Controller:
     
@@ -82,7 +90,9 @@ class Controller:
         
         return xTrain, xVal
         
-        
+#==============================================================================
+#  MODEL CLASS -  WHICH CONTAINS THE NET DEFINITIONS
+#==============================================================================
         
 class BigModel:
 
