@@ -14,7 +14,7 @@ git clone https://github.com/Groovy-Dragon/tcRIP
 
 ### Prerequisites
 
-These scripts use python 3.5 and a variety of libraries. The following are for general usage of the scripts:
+These scripts use python 3.6 and a variety of libraries. The following are for general usage of the scripts:
 
 <ul>
     <li> Biopython 1.68 </li>
@@ -46,8 +46,11 @@ These libraries are specifically for the machine learning operations like featur
 </ul>
 
 ### File Names
-Due to the modular nature of this work the majority of the scripts are standalone. 
-NEED TO COMPLETE THIS
+Due to the modular nature of this work the majority of the scripts are standalone. The key file that contains utility methods is:
+```
+dataProcessing.py
+```
+This mostly contains feature engineering utility functions, dataset creation functions, and others.
 
 
 ## Running the Code
@@ -79,7 +82,7 @@ print("Number of Shared Seqs: {}".format(len(joint)))
 print("Shared Percent: %.2f%%" % (len(joint)/(len(seqs[0])+len(seqs[1])) * 100.0))
 ```
 
-If you want to load in the CDR1 and CDR2 sequences it is done by loading a dictionary which when called extracts the CDR1 and CDR2 from data files. Note that some of the CDR1s are 5 amino acids long, compared to the vast majority which are 6 amino acids long. Due to length invariance this very small number is filtered out.
+If you want to load in the CDR1 and CDR2 sequences it is done by loading a dictionary which when called extracts the CDR1 and CDR2 from data files. Note that some of the CDR1s are 5 amino acids long, compared to the vast majority which are 6 amino acids long. Due to length invariance this very small number is filtered out. Also the classes have been kept separate up until shuffling and performing the train test split. 
 
 ```python
 # add extrac cds by getting the dicitionary
@@ -88,11 +91,56 @@ cddict=dp.extraCDs()
 seqs[0], vj[0]=dp.addCDextra(seqs[0],vj[0],cddict)
 seqs[1], vj[1]=dp.addCDextra(seqs[1],vj[1],cddict)
 ```
-From this point you are free to use your own feature engineering or the provided functions. 
+From this point can use your own feature engineering or the provided functions. 
+
+### Feature Engineering
+
+This work contains several quick functions for converting CDR strings in a list to a numerical format i.e. feature engineering. 
+One of these methods is converting sequences to Atchley Vectors. 
+
+```python
+# filter the sequences to only get CDRs of a set length e.g. 14
+seqs[0]=dp.filtr(seqs[0], 14)
+seqs[1]=dp.filtr(seqs[1], 14)
+
+# This takes the lists of CDRs (e.g. ['CASSADL..','CSARDFS...',...,'CASRDFSG...']) and converts them to flat atchley vectorized 
+# sequences. 
+
+seqs[0]=dp.seq2fatch(seqs[0])
+seqs[1]=dp.seq2fatch(seqs[1])
+    
+```
+An example of full classification using this approach is in the (Li et al Script)[ML_Li.py]
+
+Another method is generating p-Tuple vectors, or frequency counts of p-long subsequences of amino acids from each CDR3.
+
+```python
+# set the tuple lenth
+tuplen=3
+
+# Run the tuple calculation. 
+seqs[0]=dp.char2ptuple(seqs[0], n=tuplen)
+seqs[1]=dp.char2ptuple(seqs[1], n=tuplen)
+```
+You'll notice that the output of these vectors is a scipy conpressed matrix. All of the Sci-Kit learn classifiers and XGBoost can handle it but for ease it is better to convert it from COO to CDR format. This allows slicing. This is done like this:
+
+```python
+# Convert to CSR 
+seqs[0]=seqs[0].tocsr()
+seqs[1]=seqs[1].tocsr()
+```
+For an example of p-Tuple classification see the (p-Tuple script)[ML_Ptuple]
 
 
+### Dataset Pre-Processing
 
-### And coding style tests
+Explain what these tests test and why
+
+```
+Give an example
+```
+
+### Classification
 
 Explain what these tests test and why
 
