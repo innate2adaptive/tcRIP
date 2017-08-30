@@ -58,10 +58,11 @@ This mostly contains feature engineering utility functions, dataset creation fun
 The following section describes the basics of using some of the underlying functions.
 
 ### Load the Data
-First import the [data processing](../blob/master/dataProcessing.py) script which contains a large number of data loaders, feature engineering functions, and conveniance functions. 
+First import the [data processing](../blob/master/dataProcessing.py) script which contains a large number of data loaders, feature engineering functions, and conveniance functions. Also load Sci-Kit learn.
 
 ```python
 import dataProcessing as dp
+import sklearn as sk
 ```
 
 Now use the following code block to load the sequences and filter out the CDR3s that are in both classes. Note that this will load the data from the data records file (../blob/master/data_records). Note that although the V and J genes are provided in separate lists they match to the sequences by index. 
@@ -130,27 +131,53 @@ seqs[0]=seqs[0].tocsr()
 seqs[1]=seqs[1].tocsr()
 ```
 For an example of p-Tuple classification see the [p-Tuple script](../blob/master/ML_Ptuple.py). Another method for feature engineering is using protein embeddings vectors. These embeddings are either the SwissProt trained methods provided by [Asgari and Mofrad](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0141287) (2015) or the custom embeddings trained on this dataset. New embeddings can also be trained using the [ProtVec script](../blob/master/UL_ProtVec.py). 
+```python
+# Are we using the SwissProt embeddings? If not, it defaults to custom embeddings
+swiss=True
 
+# convert the strings to X dimensional vectors from the embeddings
+seqs[0]=dp.GloVe(seqs[0], True)
+seqs[1]=dp.GloVe(seqs[1], True)
+```
+The data processing script contains several more of these methods. These will be written about further in the future in the wiki.
 
 ### Dataset Pre-Processing
 
-Explain what these tests test and why
+Once the two classes have been converted to consistent length numeric values by feature engineering, we can use some utility functions to build our 'X' and 'y' pairs. Where 'X' is the data and 'y' are the labels. 
 
+```python
+# get an sklearn utility function 
+from sklearn.model_selection import train_test_split 
+
+# use function to create data
+# this expects arguments of CD4, CD8 and labels them 0, 1 respectively. 
+X, y = dp.dataCreator(seqs[0],seqs[1])
+
+# shuffle data using Sci-Kit Learn function
+X, y = sk.utils.shuffle(X,y)
+
+# print class balances
+dp.printClassBalance(y)
+
+# 20% Validation set
+xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20) 
 ```
-Give an example
-```
+You'll notice that the test set is not included. While writing the paper the test set was set aside in separate files however here this has been left to the user and all data is provided when loaded. 
 
 ### Classification
+Once the data has been processed it can now be used for training and testing a classification algorithm. A single example is as follows using XGBoost
 
-Explain what these tests test and why
-
-```
+```python
+from sklearn.model_selection import train_test_split 
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import AdaBoostClassifier
 Give an example
 ```
 
 ## Contributing
 
-Please feel free to submit a pull requests.
+Please feel free to submit a push requests.
 
 ## Versioning
 
