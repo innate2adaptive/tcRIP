@@ -165,15 +165,49 @@ xTrain, xVal, yTrain, yVal= train_test_split(X, y, test_size=0.20)
 You'll notice that the test set is not included. While writing the paper the test set was set aside in separate files however here this has been left to the user and all data is provided when loaded. 
 
 ### Classification
-Once the data has been processed it can now be used for training and testing a classification algorithm. A single example is as follows using XGBoost
+Once the data has been processed it can now be used for training and testing a classification algorithm. A single example is as follows using an Adaboost classifier.
 
 ```python
-from sklearn.model_selection import train_test_split 
+from sklearn.ensemble import AdaBoostClassifier
+
+# Set up an adaboost Classifer
+clf = AdaBoostClassifier(n_estimators=100)
+
+# Fit the booster
+clf.fit(xTrain, yTrain)
+```
+An alternative to fitting the model is to fit the model by grid search around hyper-parameters. An example is given below using an SVM classifier, where the C value, kernal, and Gamma (depending on kernel) value are optimized. Note that this will take a long time as it also performs cross-validation. So for each of k folds, there will be a however many grid search combinations to train.
+
+```python
+from sklearn.svm import SVC
+
+# set grid search across best parameters for both Linear and RBF kernels
+tuned_parameters = [{'kernel': ['rbf','linear'], 'C': [0.01,0.1,1,10,100], 'gamma':[1e-5,1e-4,1e-3,1e-2,1e-1]}]
+
+# runs grid search using the above parameter and doing 5-fold cross validation
+clf = GridSearchCV(SVC(C=1, gamma=0.01, class_weight='balanced',decision_function_shape='ovr'), tuned_parameters, cv=5, verbose=1)
+
+# fit the data
+clf.fit(xTrain, yTrain) 
+```
+After fitting the data, the class will use the best parameters from the k-fold cross validation and grid search for prediction. Prediction can now take place on the validation set and can get the classification accuracy, as well as F1, recall, and precision. 
+
+```python
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
-from sklearn.ensemble import AdaBoostClassifier
-Give an example
+
+# Predict Y labels for validation set
+y_true, y_pred = yVal, clf.predict(xVal)
+
+# get the accuracy score from prediction
+accuracy = accuracy_score(y_true, y_pred)
+print("Validation Accuracy: %.2f%%" % (accuracy * 100.0))
+
+# print report containing f1, precision, and recall for both classes
+print(classification_report(y_true, y_pred))
 ```
+
+Aside from this simple example please explore the many modular scripts which provide a variety of ways to extra features and classify.
 
 ## Contributing
 
