@@ -4,6 +4,8 @@ This is the code for the MSc Thesis: "Classification of TCR&beta; Repertoire bet
 
 This code has been written by Lewis Iain Moffat in partial completion of the MSc Machine Learning awarded by University College London, Department of Computer Science. This project used a Machine Learning approach to classifying T-Cell Receptor data as either having come from CD4 or CD8 T-Cell lineages. This is done through a combination of feature engineering methods classification algorithms.
 
+For a copy of the current thesis that this work is based on as well as the associated latex code and images, please [see my repository](https://github.com/Groovy-Dragon/COMPGI99). 
+
 ## Getting Started
 This project does not require installation and only needs to be cloned from the repository. Run the following command to get a copy of the project up and running on your local machine. Make sure you have git installed.
 
