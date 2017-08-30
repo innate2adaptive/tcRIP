@@ -50,7 +50,7 @@ Due to the modular nature of this work the majority of the scripts are standalon
 ```
 dataProcessing.py
 ```
-This mostly contains feature engineering utility functions, dataset creation functions, and others. The rest of the functions are generally modular in nature and perform a different classification or data exploration experiment. See the wiki for a short description of each file and what it does. 
+This mostly contains feature engineering utility functions, dataset creation functions, and others. The rest of the functions are generally modular in nature and perform a different classification or data exploration experiment. <b>See the wiki for a short description of each file and what it does</b>. 
 
 
 ## Running the Code
@@ -65,7 +65,7 @@ import dataProcessing as dp
 import sklearn as sk
 ```
 
-Now use the following code block to load the sequences and filter out the CDR3s that are in both classes. Note that this will load the data from the data records file (../blob/master/data_records). Note that although the V and J genes are provided in separate lists they match to the sequences by index. 
+Now use the following code block to load the sequences and filter out the CDR3s that are in both classes. Note that this will load the data from the [data records file](../blob/master/data_records). Note that although the V and J genes are provided in separate lists they match to the sequences by index. 
 ```python
 
 
