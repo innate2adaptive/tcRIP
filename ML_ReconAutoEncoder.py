@@ -4,7 +4,7 @@ Created on Mon Aug  7 12:21:10 2017
 
 @author: lewismoffat
 
-This script runs a Variational AutoEncoder network on all the data for one-hot
+This script runs a AutoEncoder network on all the data for one-hot
 encoded amino acids
 """
 
