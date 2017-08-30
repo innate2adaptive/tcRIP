@@ -50,7 +50,7 @@ Due to the modular nature of this work the majority of the scripts are standalon
 ```
 dataProcessing.py
 ```
-This mostly contains feature engineering utility functions, dataset creation functions, and others.
+This mostly contains feature engineering utility functions, dataset creation functions, and others. The rest of the functions are generally modular in nature and perform a different classification or data exploration experiment. See the wiki for a short description of each file and what it does. 
 
 
 ## Running the Code
