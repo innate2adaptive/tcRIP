@@ -10,7 +10,7 @@ For a copy of the current thesis that this work is based on as well as the assoc
 This project does not require installation and only needs to be cloned from the repository. Run the following command to get a copy of the project up and running on your local machine. Make sure you have git installed.
 
 ```git
-git clone https://github.com/Groovy-Dragon/tcRIP
+git clone https://github.com/innate2adaptive/tcRIP
 ```
  
 
