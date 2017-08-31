@@ -138,8 +138,8 @@ For an example of p-Tuple classification see the [p-Tuple script](../blob/master
 swiss=True
 
 # convert the strings to X dimensional vectors from the embeddings
-seqs[0]=dp.GloVe(seqs[0], True)
-seqs[1]=dp.GloVe(seqs[1], True)
+seqs[0]=dp.GloVe(seqs[0], swiss)
+seqs[1]=dp.GloVe(seqs[1], swiss)
 ```
 The data processing script contains several more of these methods. These will be written about further in the future in the wiki.
 
