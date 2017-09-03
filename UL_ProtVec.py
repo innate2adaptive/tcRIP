@@ -15,6 +15,10 @@ import tensorflow as tf
 from sklearn.manifold import TSNE
 from scipy.sparse import lil_matrix
 
+"""
+This script borrows inspiration from:
+https://github.com/wangz10/tensorflow-playground
+"""
 
 
 # File names for different data; A - alpha chain, B - beta chain            
