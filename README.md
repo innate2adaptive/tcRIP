@@ -217,7 +217,7 @@ Please feel free to submit a push requests.
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/Groovy-Dragon/tcRIP/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/innate2adaptive/tcRIP/tags). 
 
 ## Authors
 
